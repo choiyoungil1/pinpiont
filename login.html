@@ -81,18 +81,7 @@
     });
     document.getElementById('form-login').classList.toggle('active', tab==='login');
     document.getElementById('form-signup').classList.toggle('active', tab==='signup');
-    hideMsg();
   }
-
-  // 이미 로그인된 경우 대시보드로
-  (async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) window.location.href = 'dashboard.html';
-
-    // URL 파라미터로 탭 결정 (?tab=signup 이면 회원가입 탭 먼저)
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('tab') === 'signup') switchTab('signup');
-  })();
 
   function showMsg(msg, type='error') {
     const el = document.getElementById('auth-msg');
@@ -104,6 +93,17 @@
   function hideMsg() {
     document.getElementById('auth-msg').style.display = 'none';
   }
+
+  // 페이지 로드 시 초기화
+  window.addEventListener('DOMContentLoaded', async () => {
+    // 이미 로그인된 경우 대시보드로
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) { window.location.href = 'dashboard.html'; return; }
+
+    // URL 파라미터로 탭 결정
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('tab') === 'signup') switchTab('signup');
+  });
 
   async function login() {
     const email = document.getElementById('login-email').value.trim();
