@@ -77,6 +77,10 @@
   (async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (session) window.location.href = 'dashboard.html';
+
+    // URL 파라미터로 탭 결정 (?tab=signup 이면 회원가입 탭 먼저)
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('tab') === 'signup') switchTab('signup');
   })();
 
   function switchTab(tab) {
