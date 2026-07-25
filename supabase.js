@@ -2,14 +2,15 @@
 const SUPABASE_URL = 'https://fnbwwfwigxdvwxsavbss.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_96QP6wN2bW1Ck8HS-FjTnw_Fjpwn1MY';
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// window.supabase는 CDN에서 로드된 라이브러리 → createClient로 클라이언트 생성
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // 로그인 상태 확인 (login.html 제외한 모든 페이지에서 사용)
 async function requireAuth() {
   const isDemo = localStorage.getItem('pinpoint_demo') === 'true';
-  if (isDemo) return null; // 데모 모드
+  if (isDemo) return null;
 
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { session } } = await sb.auth.getSession();
   if (!session) {
     window.location.href = 'login.html';
     return null;
@@ -20,7 +21,7 @@ async function requireAuth() {
 // 로그아웃
 async function logout() {
   localStorage.removeItem('pinpoint_demo');
-  await supabase.auth.signOut();
+  await sb.auth.signOut();
   window.location.href = 'login.html';
 }
 
@@ -30,17 +31,16 @@ const CompanyDB = {
     const isDemo = localStorage.getItem('pinpoint_demo') === 'true';
     if (isDemo) return Storage.get('company');
 
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { session } } = await sb.auth.getSession();
     if (!session) return Storage.get('company');
 
-    const { data } = await supabase
+    const { data } = await sb
       .from('companies')
       .select('*')
       .eq('user_id', session.user.id)
       .single();
 
     if (data) {
-      // DB 데이터를 기존 형식으로 변환
       return {
         name: data.name,
         businessNumber: data.business_number,
@@ -61,7 +61,7 @@ const CompanyDB = {
       return;
     }
 
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { session } } = await sb.auth.getSession();
     if (!session) {
       Storage.set('company', companyData);
       return;
@@ -79,13 +79,12 @@ const CompanyDB = {
       updated_at: new Date().toISOString()
     };
 
-    // upsert (있으면 업데이트, 없으면 삽입)
-    const { error } = await supabase
+    const { error } = await sb
       .from('companies')
       .upsert(dbData, { onConflict: 'user_id' });
 
     if (!error) {
-      Storage.set('company', companyData); // 로컬 캐시도 업데이트
+      Storage.set('company', companyData);
     }
   }
 };

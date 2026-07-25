@@ -50,15 +50,23 @@
   <!-- 회원가입 -->
   <div class="auth-form" id="form-signup">
     <div class="form-group">
-      <label class="form-label">이메일</label>
+      <label class="form-label">이름 <span style="color:var(--accent-gold)">*</span></label>
+      <input type="text" class="form-input" id="signup-name" placeholder="담당자 이름">
+    </div>
+    <div class="form-group">
+      <label class="form-label">연락처 <span style="color:var(--accent-gold)">*</span></label>
+      <input type="tel" class="form-input" id="signup-phone" placeholder="010-0000-0000">
+    </div>
+    <div class="form-group">
+      <label class="form-label">이메일 <span style="color:var(--accent-gold)">*</span></label>
       <input type="email" class="form-input" id="signup-email" placeholder="example@company.com">
     </div>
     <div class="form-group">
-      <label class="form-label">비밀번호</label>
+      <label class="form-label">비밀번호 <span style="color:var(--accent-gold)">*</span></label>
       <input type="password" class="form-input" id="signup-password" placeholder="8자 이상">
     </div>
     <div class="form-group">
-      <label class="form-label">비밀번호 확인</label>
+      <label class="form-label">비밀번호 확인 <span style="color:var(--accent-gold)">*</span></label>
       <input type="password" class="form-input" id="signup-password2" placeholder="비밀번호 재입력">
     </div>
     <button class="btn btn-primary" style="width:100%;margin-top:8px;" onclick="signup()" id="signup-btn">회원가입</button>
@@ -96,11 +104,8 @@
 
   // 페이지 로드 시 초기화
   window.addEventListener('DOMContentLoaded', async () => {
-    // 이미 로그인된 경우 대시보드로
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { session } } = await sb.auth.getSession();
     if (session) { window.location.href = 'dashboard.html'; return; }
-
-    // URL 파라미터로 탭 결정
     const params = new URLSearchParams(window.location.search);
     if (params.get('tab') === 'signup') switchTab('signup');
   });
@@ -111,7 +116,7 @@
     if (!email || !password) return showMsg('이메일과 비밀번호를 입력해주세요.');
     const btn = document.getElementById('login-btn');
     btn.textContent = '로그인 중...'; btn.disabled = true;
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await sb.auth.signInWithPassword({ email, password });
     if (error) {
       showMsg('이메일 또는 비밀번호가 올바르지 않습니다.');
       btn.textContent = '로그인'; btn.disabled = false;
@@ -121,15 +126,22 @@
   }
 
   async function signup() {
+    const name = document.getElementById('signup-name').value.trim();
+    const phone = document.getElementById('signup-phone').value.trim();
     const email = document.getElementById('signup-email').value.trim();
     const password = document.getElementById('signup-password').value;
     const password2 = document.getElementById('signup-password2').value;
+    if (!name) return showMsg('이름을 입력해주세요.');
+    if (!phone) return showMsg('연락처를 입력해주세요.');
     if (!email || !password) return showMsg('이메일과 비밀번호를 입력해주세요.');
     if (password.length < 8) return showMsg('비밀번호는 8자 이상이어야 합니다.');
     if (password !== password2) return showMsg('비밀번호가 일치하지 않습니다.');
     const btn = document.getElementById('signup-btn');
     btn.textContent = '가입 중...'; btn.disabled = true;
-    const { error } = await supabase.auth.signUp({ email, password });
+    const { data, error } = await sb.auth.signUp({
+      email, password,
+      options: { data: { name, phone } }
+    });
     if (error) {
       showMsg(error.message);
       btn.textContent = '회원가입'; btn.disabled = false;
