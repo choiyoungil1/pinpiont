@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PinPoint - 역량강화 카드</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body { display:flex; min-height:100vh; }
+    .sidebar { width:220px; min-height:100vh; background:var(--bg-secondary); border-right:1px solid var(--border); display:flex; flex-direction:column; padding:0; position:fixed; left:0; top:0; z-index:50; }
+    .sidebar-logo { padding:20px 24px; font-size:20px; font-weight:800; color:var(--accent-gold); border-bottom:1px solid var(--border); text-decoration:none; display:block; }
+    .sidebar-logo span { color:var(--text-primary); }
+    .sidebar-section { padding:16px 12px 8px; font-size:10px; font-weight:700; letter-spacing:1px; color:var(--text-muted); text-transform:uppercase; }
+    .sidebar-nav { padding:0 12px; flex:1; }
+    .sidebar-link { display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:var(--radius-sm); font-size:14px; color:var(--text-secondary); text-decoration:none; transition:all 0.15s; margin-bottom:2px; }
+    .sidebar-link:hover { background:var(--bg-card); color:var(--text-primary); }
+    .sidebar-link.active { background:rgba(201,168,76,0.1); color:var(--accent-gold); }
+    .sidebar-link .icon { width:20px; text-align:center; font-size:16px; }
+    .sidebar-footer { padding:16px; border-top:1px solid var(--border); font-size:12px; color:var(--text-muted); }
+    .main-content { margin-left:220px; flex:1; }
+    .topbar { height:56px; background:var(--bg-secondary); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 32px; position:sticky; top:0; z-index:40; }
+    .topbar-title { font-size:15px; font-weight:700; }
+    .page { padding:32px; }
+
+    .knowledge-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 20px;
+      margin-top: 24px;
+    }
+    .kcard {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: all 0.2s;
+    }
+    .kcard:hover {
+      border-color: rgba(201,168,76,0.3);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+    }
+    .kcard-top {
+      padding: 20px 24px 16px;
+    }
+    .kcard-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .kcard-title {
+      font-size: 17px;
+      font-weight: 700;
+      line-height: 1.4;
+      margin-bottom: 14px;
+    }
+    .kcard-preview {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .kcard-bottom {
+      padding: 14px 24px;
+      background: rgba(201,168,76,0.04);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .kcard-keypoint {
+      font-size: 12px;
+      color: var(--accent-gold);
+      font-weight: 600;
+      flex: 1;
+      padding-right: 12px;
+    }
+    .kcard-week { font-size: 11px; color: var(--text-muted); }
+
+    /* 전체 보기 모달 */
+    .kcard-full-content { font-size: 14px; color: var(--text-secondary); line-height: 1.8; }
+    .kcard-full-content ul { margin-left: 16px; margin-top: 8px; }
+    .kcard-full-content li { margin-bottom: 4px; }
+    .kcard-full-content strong { color: var(--text-primary); }
+    .kcard-full-content p { margin-bottom: 12px; }
+    .kcard-full-keypoint {
+      margin-top: 20px;
+      padding: 14px 16px;
+      background: rgba(201,168,76,0.08);
+      border-left: 3px solid var(--accent-gold);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      font-size: 13px;
+      color: var(--accent-gold-light);
+      font-weight: 600;
+    }
+
+    /* 진행 통계 */
+    .progress-bar {
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin-top: 8px;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--accent-gold);
+      border-radius: 2px;
+      transition: width 0.5s ease;
+    }
+  </style>
+</head>
+<body>
+<aside class="sidebar">
+  <a href="index.html" class="sidebar-logo">Pin<span>Point</span>.</a>
+  <nav class="sidebar-nav">
+    <div class="sidebar-section">메인</div>
+    <a href="dashboard.html" class="sidebar-link"><span class="icon">🏠</span> 대시보드</a>
+    <div class="sidebar-section">카테고리</div>
+    <a href="legal.html" class="sidebar-link"><span class="icon">🏢</span> 법인 법무</a>
+    <a href="stock.html" class="sidebar-link"><span class="icon">📈</span> 주식 / 자본</a>
+    <a href="subsidy.html" class="sidebar-link"><span class="icon">💰</span> 고용 지원금</a>
+    <a href="labor.html" class="sidebar-link"><span class="icon">⚖️</span> 노무 이슈</a>
+    <a href="tax.html" class="sidebar-link"><span class="icon">🧾</span> 세무 이슈</a>
+    <a href="cert.html" class="sidebar-link"><span class="icon">🏆</span> 기업 인증</a>
+    <a href="gov.html" class="sidebar-link"><span class="icon">🏛️</span> 정부지원사업</a>
+    <div class="sidebar-section">성장</div>
+    <a href="quiz.html" class="sidebar-link"><span class="icon">🎯</span> 퀴즈 & 뱃지</a>
+    <a href="knowledge.html" class="sidebar-link active"><span class="icon">📚</span> 역량강화 카드</a>
+  </nav>
+  <div class="sidebar-footer">v0.1 Beta</div>
+</aside>
+
+<div class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">📚 역량강화 카드</span>
+  </div>
+  <div class="page">
+    <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:28px; gap:20px;">
+      <div>
+        <h2 style="font-size:22px; font-weight:800; margin-bottom:8px;">매주 업데이트되는 실무 지식</h2>
+        <p style="color:var(--text-secondary); font-size:14px;">경리 본인의 전문성을 키우는 실용적인 카드입니다.</p>
+      </div>
+      <div style="text-align:right; flex-shrink:0;">
+        <div style="font-size:13px; color:var(--text-muted); margin-bottom:4px;">읽은 카드</div>
+        <div style="font-size:24px; font-weight:800; color:var(--accent-gold);" id="read-count">0 / 3</div>
+        <div class="progress-bar" style="width:120px;">
+          <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="knowledge-grid" id="knowledge-grid">
+      <!-- JS 렌더링 -->
+    </div>
+  </div>
+</div>
+
+<!-- 카드 상세 모달 -->
+<div id="kcard-modal" style="display:none;" class="modal-overlay">
+  <div class="modal" style="max-width:580px;">
+    <div class="modal-header">
+      <div>
+        <div id="kcard-modal-meta" style="display:flex; gap:8px; margin-bottom:8px;"></div>
+        <span class="modal-title" id="kcard-modal-title"></span>
+      </div>
+      <button class="modal-close" onclick="document.getElementById('kcard-modal').style.display='none'">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="kcard-full-content" id="kcard-modal-content"></div>
+      <div class="kcard-full-keypoint" id="kcard-modal-keypoint"></div>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+  const readCards = Storage.get('read_cards') || [];
+
+  function markRead(cardId) {
+    if (!readCards.includes(cardId)) {
+      readCards.push(cardId);
+      Storage.set('read_cards', readCards);
+      updateProgress();
+    }
+  }
+
+  function updateProgress() {
+    const count = readCards.length;
+    const total = knowledgeCards.length;
+    document.getElementById('read-count').textContent = `${count} / ${total}`;
+    document.getElementById('progress-fill').style.width = `${(count/total)*100}%`;
+  }
+
+  function openCard(cardId) {
+    const card = knowledgeCards.find(c => c.id === cardId);
+    if (!card) return;
+    document.getElementById('kcard-modal-meta').innerHTML = `
+      <span class="badge badge-gold">${card.category}</span>
+      <span style="font-size:12px; color:var(--text-muted);">${card.week}</span>
+    `;
+    document.getElementById('kcard-modal-title').textContent = card.title;
+    document.getElementById('kcard-modal-content').innerHTML = card.content;
+    document.getElementById('kcard-modal-keypoint').innerHTML = `📌 ${card.keyPoint}`;
+    document.getElementById('kcard-modal').style.display = 'flex';
+    markRead(cardId);
+    renderGrid();
+  }
+
+  function renderGrid() {
+    document.getElementById('knowledge-grid').innerHTML = knowledgeCards.map(card => {
+      const isRead = readCards.includes(card.id);
+      const preview = card.content.replace(/<[^>]+>/g, '').substring(0, 120) + '...';
+      return `
+        <div class="kcard" onclick="openCard(${card.id})">
+          <div class="kcard-top">
+            <div class="kcard-meta">
+              <span class="badge badge-gold">${card.category}</span>
+              ${isRead ? '<span class="badge badge-success">✓ 읽음</span>' : '<span class="badge badge-muted">NEW</span>'}
+            </div>
+            <div class="kcard-title">${card.title}</div>
+            <div class="kcard-preview">${preview}</div>
+          </div>
+          <div class="kcard-bottom">
+            <div class="kcard-keypoint">📌 ${card.keyPoint}</div>
+            <div class="kcard-week">${card.week}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  renderGrid();
+  updateProgress();
+</script>
+</body>
+</html>

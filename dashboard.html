@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PinPoint - 대시보드</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body { display:flex; min-height:100vh; }
+    .sidebar { width:220px; min-height:100vh; background:var(--bg-secondary); border-right:1px solid var(--border); display:flex; flex-direction:column; padding:0; position:fixed; left:0; top:0; z-index:50; }
+    .sidebar-logo { padding:20px 24px; font-size:20px; font-weight:800; color:var(--accent-gold); border-bottom:1px solid var(--border); text-decoration:none; display:block; }
+    .sidebar-logo span { color:var(--text-primary); }
+    .sidebar-section { padding:16px 12px 8px; font-size:10px; font-weight:700; letter-spacing:1px; color:var(--text-muted); text-transform:uppercase; }
+    .sidebar-nav { padding:0 12px; flex:1; }
+    .sidebar-link { display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:var(--radius-sm); font-size:14px; color:var(--text-secondary); text-decoration:none; transition:all 0.15s; margin-bottom:2px; }
+    .sidebar-link:hover { background:var(--bg-card); color:var(--text-primary); }
+    .sidebar-link.active { background:rgba(201,168,76,0.1); color:var(--accent-gold); }
+    .sidebar-link .icon { width:20px; text-align:center; font-size:16px; }
+    .sidebar-footer { padding:16px; border-top:1px solid var(--border); font-size:12px; color:var(--text-muted); }
+    .main-content { margin-left:220px; flex:1; }
+    .topbar { height:56px; background:var(--bg-secondary); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 32px; position:sticky; top:0; z-index:40; }
+    .topbar-title { font-size:15px; font-weight:700; }
+    .topbar-right { display:flex; align-items:center; gap:12px; }
+    .company-name { font-size:13px; color:var(--text-secondary); }
+    .dashboard { padding:28px 32px; }
+
+    /* 웰컴 바 */
+    .welcome-bar {
+      background: linear-gradient(135deg, var(--bg-card) 0%, rgba(201,168,76,0.06) 100%);
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: var(--radius);
+      padding: 22px 28px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .welcome-text h2 { font-size: 19px; font-weight: 700; margin-bottom: 4px; }
+    .welcome-text p { font-size: 13px; color: var(--text-secondary); }
+    .welcome-stats { display:flex; gap:28px; }
+    .stat-item { text-align:center; }
+    .stat-num { font-size:26px; font-weight:800; color:var(--accent-gold); line-height:1; }
+    .stat-label { font-size:11px; color:var(--text-muted); margin-top:4px; }
+
+    /* 메인 2단 레이아웃 */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    /* 이번 달 할 일 */
+    .todo-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px;
+    }
+    .todo-list { display:flex; flex-direction:column; gap:10px; margin-top:16px; }
+    .todo-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 14px;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      transition: all 0.15s;
+    }
+    .todo-item:hover { border-color: var(--border-accent); }
+    .todo-dday {
+      min-width: 52px;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 800;
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+    .dday-red { background: rgba(232,90,74,0.15); color: var(--danger); }
+    .dday-yellow { background: rgba(232,164,74,0.15); color: var(--warning); }
+    .dday-blue { background: rgba(74,111,165,0.15); color: var(--accent-blue-light); }
+    .dday-green { background: rgba(76,175,130,0.15); color: var(--success); }
+    .todo-info { flex:1; }
+    .todo-name { font-size:14px; font-weight:600; margin-bottom:3px; }
+    .todo-desc { font-size:12px; color:var(--text-muted); }
+    .todo-cat { font-size:11px; color:var(--text-muted); }
+
+    /* 바로 찾아보기 */
+    .quick-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px;
+    }
+    .quick-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .quick-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 10px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      text-decoration: none;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    .quick-btn:hover {
+      border-color: rgba(201,168,76,0.4);
+      background: rgba(201,168,76,0.05);
+      transform: translateY(-2px);
+    }
+    .quick-btn .q-icon { font-size:24px; }
+    .quick-btn .q-label { font-size:12px; font-weight:600; color:var(--text-secondary); text-align:center; }
+    .quick-btn:hover .q-label { color:var(--accent-gold); }
+
+    /* 하단 그리드 */
+    .bottom-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    /* 퀴즈 */
+    .quiz-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:22px; }
+    .quiz-question { font-size:14px; font-weight:600; margin:14px 0; line-height:1.6; }
+    .quiz-options { display:flex; flex-direction:column; gap:7px; }
+    .quiz-option { padding:9px 13px; background:var(--bg-secondary); border:1px solid var(--border); border-radius:var(--radius-sm); font-size:13px; cursor:pointer; transition:all 0.15s; text-align:left; color:var(--text-primary); }
+    .quiz-option:hover { border-color:var(--accent-gold); }
+    .quiz-option.correct { border-color:var(--success); background:rgba(76,175,130,0.1); color:var(--success); }
+    .quiz-option.wrong { border-color:var(--danger); background:rgba(232,90,74,0.1); color:var(--danger); }
+    .quiz-explanation { display:none; margin-top:12px; padding:10px 13px; background:rgba(201,168,76,0.05); border:1px solid rgba(201,168,76,0.2); border-radius:var(--radius-sm); font-size:12px; color:var(--text-secondary); }
+
+    /* 역량강화 카드 */
+    .kcard { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:22px; }
+    .kcard-meta { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+    .kcard-title { font-size:15px; font-weight:700; margin-bottom:10px; }
+    .kcard-content { font-size:13px; color:var(--text-secondary); line-height:1.7; }
+    .kcard-keypoint { margin-top:12px; padding:10px 13px; background:rgba(201,168,76,0.08); border-left:3px solid var(--accent-gold); border-radius:0 var(--radius-sm) var(--radius-sm) 0; font-size:12px; color:var(--accent-gold-light); font-weight:600; }
+
+    /* 회사등록 배너 */
+    .setup-banner { background:linear-gradient(135deg,rgba(201,168,76,0.08),rgba(74,111,165,0.08)); border:1px solid rgba(201,168,76,0.25); border-radius:var(--radius); padding:24px; text-align:center; margin-bottom:24px; }
+    .setup-banner h3 { font-size:16px; font-weight:700; margin-bottom:8px; }
+    .setup-banner p { font-size:13px; color:var(--text-secondary); margin-bottom:18px; }
+
+    @media(max-width:900px) {
+      .sidebar{display:none;}
+      .main-content{margin-left:0;}
+      .dashboard-grid{grid-template-columns:1fr;}
+      .bottom-grid{grid-template-columns:1fr;}
+      .welcome-stats{display:none;}
+    }
+  </style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <a href="index.html" class="sidebar-logo">Pin<span>Point</span>.</a>
+  <nav class="sidebar-nav">
+    <div class="sidebar-section">메인</div>
+    <a href="dashboard.html" class="sidebar-link active"><span class="icon">🏠</span> 대시보드</a>
+    <a href="calendar.html" class="sidebar-link"><span class="icon">📅</span> 연간 캘린더</a>
+    <div class="sidebar-section">정기 일정형</div>
+    <a href="legal.html" class="sidebar-link"><span class="icon">🏢</span> 법인 법무</a>
+    <a href="tax.html" class="sidebar-link"><span class="icon">🧾</span> 세무 이슈</a>
+    <a href="labor.html" class="sidebar-link"><span class="icon">⚖️</span> 노무 이슈</a>
+    <a href="stock.html" class="sidebar-link"><span class="icon">📈</span> 주식 / 자본</a>
+    <div class="sidebar-section">수시 조회형</div>
+    <a href="subsidy.html" class="sidebar-link"><span class="icon">💰</span> 고용 지원금</a>
+    <a href="cert.html" class="sidebar-link"><span class="icon">🏆</span> 기업 인증</a>
+    <a href="gov.html" class="sidebar-link"><span class="icon">🏛️</span> 정부지원사업</a>
+    <div class="sidebar-section">성장</div>
+    <a href="quiz.html" class="sidebar-link"><span class="icon">🎯</span> 퀴즈 & 뱃지</a>
+    <a href="knowledge.html" class="sidebar-link"><span class="icon">📚</span> 역량강화 카드</a>
+  </nav>
+  <div class="sidebar-footer">v0.1 Beta · 정보 제공 목적</div>
+</aside>
+
+<div class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">대시보드</span>
+    <div class="topbar-right">
+      <span class="company-name" id="company-display">회사 미등록</span>
+      <span class="company-name" id="user-email" style="color:var(--text-muted);font-size:12px;"></span>
+      <button class="btn btn-outline btn-sm" onclick="openCompanySetup()">⚙️ 회사 정보</button>
+      <button class="btn btn-ghost btn-sm" onclick="logout()" style="font-size:12px;">로그아웃</button>
+    </div>
+  </div>
+
+  <div class="dashboard">
+
+    <!-- 회사 미등록 배너 -->
+    <div class="setup-banner" id="setup-banner" style="display:none;">
+      <h3>🏢 회사 정보를 등록해주세요</h3>
+      <p>회사 정보를 입력하면 맞춤 알림과 일정을 제공해드립니다</p>
+      <button class="btn btn-primary" onclick="openCompanySetup()">회사 정보 등록하기</button>
+    </div>
+
+    <!-- 웰컴 바 -->
+    <div class="welcome-bar">
+      <div class="welcome-text">
+        <h2 id="welcome-msg">회사의 꽃, 오늘도 빛나세요! 🌸</h2>
+        <p id="welcome-sub">오늘도 핀포인트가 당신의 가치를 올려드릴게요.</p>
+      </div>
+      <div class="welcome-stats">
+        <div class="stat-item">
+          <div class="stat-num" id="alert-count">0</div>
+          <div class="stat-label">이번달 일정</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num" id="badge-count">0</div>
+          <div class="stat-label">획득 뱃지</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num" id="quiz-count">0</div>
+          <div class="stat-label">퀴즈 정답</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 메인 2단 -->
+    <div class="dashboard-grid">
+
+      <!-- 이번 달 할 일 -->
+      <div class="todo-card">
+        <div class="section-header">
+          <div>
+            <div class="section-title">🗓️ 이번 달 정기 일정</div>
+            <div class="section-sub">놓치면 안 되는 정기 업무</div>
+          </div>
+          <a href="calendar.html" class="btn btn-ghost btn-sm">연간 보기 →</a>
+        </div>
+        <div class="todo-list" id="todo-list"></div>
+      </div>
+
+      <!-- 바로 찾아보기 -->
+      <div class="quick-card">
+        <div class="section-header">
+          <div>
+            <div class="section-title">🔍 바로 찾아보기</div>
+            <div class="section-sub">필요할 때 수시로</div>
+          </div>
+        </div>
+        <div class="quick-grid">
+          <a href="subsidy.html" class="quick-btn">
+            <span class="q-icon">💰</span>
+            <span class="q-label">고용지원금<br>사다리타기</span>
+          </a>
+          <a href="cert.html" class="quick-btn">
+            <span class="q-icon">🏆</span>
+            <span class="q-label">기업인증<br>혜택 보기</span>
+          </a>
+          <a href="gov.html" class="quick-btn">
+            <span class="q-icon">🏛️</span>
+            <span class="q-label">정부지원사업<br>공고 보기</span>
+          </a>
+          <a href="cert.html" class="quick-btn">
+            <span class="q-icon">🤝</span>
+            <span class="q-label">전문가<br>연결하기</span>
+          </a>
+          <a href="stock.html" class="quick-btn">
+            <span class="q-icon">📊</span>
+            <span class="q-label">주식가치<br>시뮬레이터</span>
+          </a>
+          <a href="labor.html" class="quick-btn">
+            <span class="q-icon">📋</span>
+            <span class="q-label">법정교육<br>업체 찾기</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 하단: 퀴즈 + 역량강화 -->
+    <div class="bottom-grid">
+      <div class="quiz-card">
+        <div class="section-header">
+          <div>
+            <div class="section-title">🎯 이번 주 퀴즈</div>
+            <div class="section-sub">맞히면 뱃지 획득!</div>
+          </div>
+          <span class="badge badge-gold" id="quiz-cat-badge">로딩중</span>
+        </div>
+        <div id="quiz-container"></div>
+      </div>
+
+      <div class="kcard">
+        <div class="section-header">
+          <div>
+            <div class="section-title">📚 이번 주 실무 카드</div>
+            <div class="section-sub">경리 역량 UP</div>
+          </div>
+          <a href="knowledge.html" class="btn btn-ghost btn-sm">전체 보기</a>
+        </div>
+        <div id="knowledge-container"></div>
+      </div>
+    </div>
+
+    <div class="disclaimer" style="margin-top:20px;">
+      본 서비스의 모든 정보는 참고 목적으로 제공되며, 법률·세무·노무 자문 서비스가 아닙니다. 중요한 의사결정 전 반드시 관련 전문가와 상담하시기 바랍니다.
+    </div>
+  </div>
+</div>
+
+<!-- 회사 등록 모달 -->
+<div id="company-modal" style="display:none;" class="modal-overlay">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-header">
+      <span class="modal-title">🏢 회사 정보 등록</span>
+      <button class="modal-close" onclick="closeCompanyModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+        <div class="form-group" style="grid-column:1/-1;">
+          <label class="form-label">회사명 *</label>
+          <input type="text" class="form-input" id="c-name" placeholder="(주)홍길동기업">
+        </div>
+        <div class="form-group">
+          <label class="form-label">업종</label>
+          <select class="form-select" id="c-industry">
+            <option value="">선택</option>
+            <option>제조업</option><option>도소매업</option><option>서비스업</option>
+            <option>IT/소프트웨어</option><option>건설업</option><option>기타</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">법인/개인</label>
+          <select class="form-select" id="c-type">
+            <option value="법인">법인사업자</option>
+            <option value="개인">개인사업자</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">결산월</label>
+          <select class="form-select" id="c-fiscal">
+            <option value="12">12월 (일반)</option>
+            <option value="3">3월</option><option value="6">6월</option><option value="9">9월</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">근로자 수</label>
+          <select class="form-select" id="c-employees">
+            <option value="5">5인 미만</option><option value="9">5~9인</option>
+            <option value="29">10~29인</option><option value="49">30~49인</option>
+            <option value="99">50~99인</option><option value="100">100인 이상</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">설립연도</label>
+          <input type="number" class="form-input" id="c-founded" placeholder="2015">
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="section-title" style="font-size:14px; margin-bottom:14px;">임원 정보 (임기 알림용)</div>
+      <div id="directors-list"></div>
+      <button class="btn btn-ghost btn-sm" onclick="addDirector()" style="margin-top:8px;">+ 임원 추가</button>
+      <div style="margin-top:24px; display:flex; gap:10px; justify-content:flex-end;">
+        <button class="btn btn-ghost" onclick="closeCompanyModal()">취소</button>
+        <button class="btn btn-primary" onclick="saveCompany()">저장하기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
+<script src="app.js"></script>
+<script>
+  // 이번 달 정기 일정 데이터 (월별)
+  const monthlySchedule = {
+    1:  [
+      { name: '부가세 확정신고', desc: '2기 확정 (7~12월)', dday: 25, cat: '세무', color: 'red' },
+      { name: '연말정산 준비', desc: '근로소득 간이세액표 확인', dday: 31, cat: '세무', color: 'yellow' }
+    ],
+    2:  [
+      { name: '연말정산 제출', desc: '근로자 소득공제 자료 제출', dday: 28, cat: '세무', color: 'yellow' }
+    ],
+    3:  [
+      { name: '법인세 신고', desc: '12월 결산법인 (3월 말)', dday: 31, cat: '세무', color: 'red' },
+      { name: '정기주총 개최', desc: '결산 후 3개월 이내', dday: 31, cat: '법무', color: 'yellow' }
+    ],
+    4:  [
+      { name: '부가세 예정신고', desc: '1기 예정 (1~3월)', dday: 25, cat: '세무', color: 'red' },
+      { name: '임원보수계약서', desc: '주총 후 작성/보관', dday: 30, cat: '법무', color: 'blue' }
+    ],
+    5:  [
+      { name: '원천세 신고', desc: '4월분 원천세', dday: 10, cat: '세무', color: 'yellow' }
+    ],
+    6:  [
+      { name: '결산공고', desc: '외감대상법인 결산공고', dday: 30, cat: '법무', color: 'blue' }
+    ],
+    7:  [
+      { name: '부가세 확정신고', desc: '1기 확정 (1~6월)', dday: 25, cat: '세무', color: 'red' },
+      { name: '주식가치평가', desc: '결산기준 연간 가치 확인', dday: 31, cat: '주식', color: 'blue' }
+    ],
+    8:  [
+      { name: '최저임금 고시', desc: '내년 최저임금 확인 및 대비', dday: 5, cat: '노무', color: 'yellow' },
+      { name: '법정교육 점검', desc: '성희롱·괴롭힘 교육 이수 확인', dday: 31, cat: '노무', color: 'blue' }
+    ],
+    9:  [
+      { name: '취업규칙 검토', desc: '최저임금 인상 반영 여부', dday: 30, cat: '노무', color: 'blue' }
+    ],
+    10: [
+      { name: '부가세 예정신고', desc: '2기 예정 (7~9월)', dday: 25, cat: '세무', color: 'red' },
+      { name: '연차사용촉진', desc: '연차 만료 6개월 전 촉진', dday: 31, cat: '노무', color: 'yellow' }
+    ],
+    11: [
+      { name: '연말 급여 정산 준비', desc: '각종 공제 항목 정리', dday: 30, cat: '세무', color: 'blue' }
+    ],
+    12: [
+      { name: '결산 준비', desc: '연간 장부 마감 및 결산', dday: 31, cat: '세무', color: 'yellow' },
+      { name: '임원 임기 체크', desc: '내년 만료 임원 중임 준비', dday: 31, cat: '법무', color: 'blue' }
+    ]
+  };
+
+  // 이번 달 일정 렌더링
+  function renderTodoList() {
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    const today = now.getDate();
+    const items = monthlySchedule[month] || [];
+    const list = document.getElementById('todo-list');
+
+    if (items.length === 0) {
+      list.innerHTML = '<div class="empty-state"><div class="icon">✅</div><p>이번 달 정기 일정이 없습니다</p></div>';
+      return;
+    }
+
+    document.getElementById('alert-count').textContent = items.length;
+
+    list.innerHTML = items.map(item => {
+      const remaining = item.dday - today;
+      let ddayText, ddayClass;
+      if (remaining < 0) { ddayText = '완료'; ddayClass = 'dday-green'; }
+      else if (remaining === 0) { ddayText = 'D-Day'; ddayClass = 'dday-red'; }
+      else if (remaining <= 7) { ddayText = `D-${remaining}`; ddayClass = 'dday-red'; }
+      else if (remaining <= 14) { ddayText = `D-${remaining}`; ddayClass = 'dday-yellow'; }
+      else { ddayText = `D-${remaining}`; ddayClass = 'dday-blue'; }
+
+      const catColors = { '세무':'🧾', '법무':'🏢', '노무':'⚖️', '주식':'📈' };
+
+      return `
+        <div class="todo-item">
+          <div class="todo-dday ${ddayClass}">${ddayText}</div>
+          <div class="todo-info">
+            <div class="todo-name">${item.name}</div>
+            <div class="todo-desc">${item.desc}</div>
+          </div>
+          <div class="todo-cat">${catColors[item.cat] || ''} ${item.cat}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // 퀴즈 렌더링
+  function renderQuiz() {
+    const quiz = quizData[AppState.currentQuizIndex % quizData.length];
+    document.getElementById('quiz-cat-badge').textContent = `${quiz.category} · ${quiz.level}`;
+    document.getElementById('quiz-container').innerHTML = `
+      <p class="quiz-question">${quiz.question}</p>
+      <div class="quiz-options">
+        ${quiz.options.map((opt, i) => `
+          <button class="quiz-option" onclick="answerQuiz(${quiz.id}, ${i}, ${quiz.answer}, this)">${opt}</button>
+        `).join('')}
+      </div>
+      <div class="quiz-explanation" id="quiz-exp">💡 ${quiz.explanation}</div>
+    `;
+  }
+
+  function answerQuiz(quizId, selected, correct, btn) {
+    const options = btn.closest('.quiz-options').querySelectorAll('.quiz-option');
+    options.forEach(o => o.disabled = true);
+    const isCorrect = selected === correct;
+    options[selected].classList.add(isCorrect ? 'correct' : 'wrong');
+    options[correct].classList.add('correct');
+    document.getElementById('quiz-exp').style.display = 'block';
+    saveQuizResult(quizId, isCorrect);
+    if (isCorrect) showToast('정답입니다! 🎉', 'success');
+    else showToast('오답입니다. 해설을 확인해보세요.', 'error');
+    updateStats();
+  }
+
+  // 역량강화 카드
+  function renderKnowledge() {
+    const card = knowledgeCards[0];
+    document.getElementById('knowledge-container').innerHTML = `
+      <div class="kcard-meta">
+        <span class="badge badge-gold">${card.category}</span>
+        <span style="font-size:12px;color:var(--text-muted);">${card.week}</span>
+      </div>
+      <div class="kcard-title">${card.title}</div>
+      <div class="kcard-content" style="display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;">${card.content.replace(/<[^>]+>/g,'')}</div>
+      <div class="kcard-keypoint">📌 ${card.keyPoint}</div>
+    `;
+  }
+
+  // 통계
+  function updateStats() {
+    const scores = Storage.get('quiz_scores') || [];
+    const correct = scores.filter(s => s.correct).length;
+    const badges = Storage.get('badges') || [];
+    document.getElementById('quiz-count').textContent = correct;
+    document.getElementById('badge-count').textContent = badges.length;
+  }
+
+  // 회사 정보
+  function loadCompanyInfo() {
+    const company = CompanyStore.get();
+    if (company) {
+      document.getElementById('company-display').textContent = company.name;
+      document.getElementById('welcome-msg').textContent = `회사의 꽃, ${company.name} 담당자님! 🌸`;
+      document.getElementById('welcome-sub').textContent = `${company.industry || ''} · 근로자 ${company.employees}인 이하 · 결산월 ${company.fiscal}월`;
+      document.getElementById('setup-banner').style.display = 'none';
+    } else {
+      document.getElementById('setup-banner').style.display = 'block';
+    }
+  }
+
+  // 회사 모달
+  let directorCount = 0;
+  function openCompanySetup() {
+    const company = CompanyStore.get();
+    if (company) {
+      document.getElementById('c-name').value = company.name || '';
+      document.getElementById('c-industry').value = company.industry || '';
+      document.getElementById('c-type').value = company.type || '법인';
+      document.getElementById('c-fiscal').value = company.fiscal || '12';
+      document.getElementById('c-employees').value = company.employees || '9';
+      document.getElementById('c-founded').value = company.founded || '';
+    }
+    document.getElementById('company-modal').style.display = 'flex';
+  }
+  function closeCompanyModal() { document.getElementById('company-modal').style.display = 'none'; }
+  function addDirector() {
+    directorCount++;
+    const list = document.getElementById('directors-list');
+    const div = document.createElement('div');
+    div.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;margin-bottom:8px;align-items:end;';
+    div.innerHTML = `
+      <input type="text" class="form-input" placeholder="성명" data-director="name-${directorCount}">
+      <input type="text" class="form-input" placeholder="직책(이사/감사)" data-director="role-${directorCount}">
+      <input type="date" class="form-input" data-director="date-${directorCount}">
+      <button class="btn btn-ghost btn-sm" onclick="this.parentElement.remove()">✕</button>
+    `;
+    list.appendChild(div);
+  }
+  function saveCompany() {
+    const name = document.getElementById('c-name').value.trim();
+    if (!name) { showToast('회사명을 입력해주세요.', 'error'); return; }
+    const directors = [];
+    document.querySelectorAll('[data-director]').forEach(el => {
+      const [field, id] = el.dataset.director.split('-');
+      if (!directors[id-1]) directors[id-1] = {};
+      directors[id-1][field] = el.value;
+    });
+    CompanyStore.set({
+      name, industry: document.getElementById('c-industry').value,
+      type: document.getElementById('c-type').value,
+      fiscal: document.getElementById('c-fiscal').value,
+      employees: document.getElementById('c-employees').value,
+      founded: document.getElementById('c-founded').value,
+      directors: directors.filter(d => d && d.name)
+    });
+    // DB에도 저장
+    CompanyDB.set(CompanyStore.get());
+    closeCompanyModal();
+    showToast('회사 정보가 저장되었습니다!', 'success');
+    loadCompanyInfo();
+  }
+
+  // 초기화
+  (async () => {
+    const user = await requireAuth();
+    if (user) {
+      document.getElementById('user-email').textContent = user.email;
+      // DB에서 회사정보 불러오기
+      const dbCompany = await CompanyDB.get();
+      if (dbCompany) CompanyStore.set(dbCompany);
+    }
+    renderTodoList();
+    renderQuiz();
+    renderKnowledge();
+    loadCompanyInfo();
+    updateStats();
+  })();
+</script>
+</body>
+</html>

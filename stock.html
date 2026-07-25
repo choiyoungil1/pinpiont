@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PinPoint - 주식/자본</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body{display:flex;min-height:100vh;}
+    .sidebar{width:220px;min-height:100vh;background:var(--bg-secondary);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:0;position:fixed;left:0;top:0;z-index:50;}
+    .sidebar-logo{padding:20px 24px;font-size:20px;font-weight:800;color:var(--accent-gold);border-bottom:1px solid var(--border);text-decoration:none;display:block;}
+    .sidebar-logo span{color:var(--text-primary);}
+    .sidebar-section{padding:16px 12px 8px;font-size:10px;font-weight:700;letter-spacing:1px;color:var(--text-muted);text-transform:uppercase;}
+    .sidebar-nav{padding:0 12px;flex:1;}
+    .sidebar-link{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--radius-sm);font-size:14px;color:var(--text-secondary);text-decoration:none;transition:all 0.15s;margin-bottom:2px;}
+    .sidebar-link:hover{background:var(--bg-card);color:var(--text-primary);}
+    .sidebar-link.active{background:rgba(201,168,76,0.1);color:var(--accent-gold);}
+    .sidebar-link .icon{width:20px;text-align:center;font-size:16px;}
+    .sidebar-footer{padding:16px;border-top:1px solid var(--border);font-size:12px;color:var(--text-muted);}
+    .main-content{margin-left:220px;flex:1;}
+    .topbar{height:56px;background:var(--bg-secondary);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 32px;position:sticky;top:0;z-index:40;}
+    .topbar-title{font-size:15px;font-weight:700;}
+    .page{padding:28px 32px;}
+
+    .sim-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:20px;}
+    .input-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin:16px 0;}
+    .result-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-top:20px;}
+    .result-item{background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;}
+    .result-label{font-size:12px;color:var(--text-muted);margin-bottom:6px;}
+    .result-value{font-size:20px;font-weight:800;color:var(--accent-gold);}
+    .result-sub{font-size:11px;color:var(--text-muted);margin-top:4px;}
+
+    .risk-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px;}
+    .risk-item{background:var(--bg-secondary);border-radius:var(--radius-sm);padding:16px;border:1px solid var(--border);}
+    .risk-title{font-size:13px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+    .risk-amount{font-size:18px;font-weight:800;margin-bottom:6px;}
+    .risk-desc{font-size:12px;color:var(--text-muted);line-height:1.5;}
+    .risk-action{margin-top:10px;}
+
+    .scenario-tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+    .scenario-tab{padding:6px 14px;border-radius:20px;font-size:13px;border:1px solid var(--border);background:var(--bg-card);color:var(--text-secondary);cursor:pointer;transition:all 0.15s;}
+    .scenario-tab.active{border-color:var(--accent-gold);color:var(--accent-gold);background:rgba(201,168,76,0.08);}
+
+    @media(max-width:768px){.sidebar{display:none;}.main-content{margin-left:0;}.page{padding:16px;}.risk-grid{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+<aside class="sidebar">
+  <a href="index.html" class="sidebar-logo">Pin<span>Point</span>.</a>
+  <nav class="sidebar-nav">
+    <div class="sidebar-section">메인</div>
+    <a href="dashboard.html" class="sidebar-link"><span class="icon">🏠</span> 대시보드</a>
+    <a href="calendar.html" class="sidebar-link"><span class="icon">📅</span> 연간 캘린더</a>
+    <div class="sidebar-section">정기 일정형</div>
+    <a href="legal.html" class="sidebar-link"><span class="icon">🏢</span> 법인 법무</a>
+    <a href="tax.html" class="sidebar-link"><span class="icon">🧾</span> 세무 이슈</a>
+    <a href="labor.html" class="sidebar-link"><span class="icon">⚖️</span> 노무 이슈</a>
+    <a href="stock.html" class="sidebar-link active"><span class="icon">📈</span> 주식 / 자본</a>
+    <div class="sidebar-section">수시 조회형</div>
+    <a href="subsidy.html" class="sidebar-link"><span class="icon">💰</span> 고용 지원금</a>
+    <a href="cert.html" class="sidebar-link"><span class="icon">🏆</span> 기업 인증</a>
+    <a href="gov.html" class="sidebar-link"><span class="icon">🏛️</span> 정부지원사업</a>
+    <div class="sidebar-section">성장</div>
+    <a href="quiz.html" class="sidebar-link"><span class="icon">🎯</span> 퀴즈 & 뱃지</a>
+    <a href="knowledge.html" class="sidebar-link"><span class="icon">📚</span> 역량강화 카드</a>
+  </nav>
+  <div class="sidebar-footer">v0.1 Beta</div>
+</aside>
+
+<div class="main-content">
+  <div class="topbar"><span class="topbar-title">📈 주식 / 자본</span></div>
+  <div class="page">
+
+    <div style="margin-bottom:24px;">
+      <h2 style="font-size:22px;font-weight:800;margin-bottom:6px;">비상장주식 가치 & 리스크 시뮬레이터</h2>
+      <p style="color:var(--text-secondary);font-size:14px;">결산 기준 주식가치와 파생 리스크를 시뮬레이션합니다.</p>
+    </div>
+
+    <!-- 기본 정보 입력 -->
+    <div class="sim-card">
+      <div class="section-title" style="margin-bottom:4px;">📊 기본 정보 입력</div>
+      <div class="section-sub" style="margin-bottom:0;">결산 재무제표 기준으로 입력해주세요</div>
+      <div class="input-grid">
+        <div class="form-group">
+          <label class="form-label">총발행주식수</label>
+          <input type="number" class="form-input" id="total-shares" placeholder="10,000" oninput="calculate()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">대표자 지분율 (%)</label>
+          <input type="number" class="form-input" id="owner-ratio" placeholder="100" max="100" oninput="calculate()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">순자산 (원)</label>
+          <input type="number" class="form-input" id="net-assets" placeholder="500,000,000" oninput="calculate()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">당기순이익 (원)</label>
+          <input type="number" class="form-input" id="net-income" placeholder="100,000,000" oninput="calculate()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">대표자 나이 (선택)</label>
+          <input type="number" class="form-input" id="owner-age" placeholder="50" oninput="calculate()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">배우자/자녀 유무</label>
+          <select class="form-select" id="family" onchange="calculate()">
+            <option value="none">없음</option>
+            <option value="spouse">배우자만</option>
+            <option value="child">자녀만</option>
+            <option value="both">배우자+자녀</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="calculate()" style="margin-top:4px;">시뮬레이션 실행</button>
+    </div>
+
+    <!-- 결과 -->
+    <div id="result-section" style="display:none;">
+
+      <!-- 주식가치 -->
+      <div class="sim-card">
+        <div class="section-title" style="margin-bottom:16px;">📈 주식가치 계산 결과</div>
+        <div class="result-grid">
+          <div class="result-item">
+            <div class="result-label">1주당 가치 (순자산 기준)</div>
+            <div class="result-value" id="r-per-share">-</div>
+            <div class="result-sub">순자산 ÷ 총발행주식수</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">대표자 보유 주식 가치</div>
+            <div class="result-value" id="r-owner-value">-</div>
+            <div class="result-sub">대표자 지분 기준</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">회사 총 가치</div>
+            <div class="result-value" id="r-total-value">-</div>
+            <div class="result-sub">순자산 기준 (참고용)</div>
+          </div>
+        </div>
+        <div style="margin-top:14px;padding:12px 14px;background:rgba(201,168,76,0.05);border:1px solid rgba(201,168,76,0.2);border-radius:var(--radius-sm);font-size:12px;color:var(--text-muted);">
+          💡 실제 비상장주식 가치평가는 순자산가치법·수익가치법을 병용하는 보충적 평가방법을 사용합니다. 본 결과는 순자산 기준 간이 추정값입니다.
+        </div>
+      </div>
+
+      <!-- 리스크 시뮬레이션 -->
+      <div class="sim-card">
+        <div class="section-title" style="margin-bottom:8px;">⚠️ 파생 리스크 시뮬레이션</div>
+        <div class="section-sub" style="margin-bottom:16px;">주식가치를 기준으로 발생 가능한 세금을 예상합니다</div>
+
+        <div class="scenario-tabs">
+          <button class="scenario-tab active" onclick="setScenario('inherit', this)">🔴 상속 (사망)</button>
+          <button class="scenario-tab" onclick="setScenario('gift', this)">🟡 증여 (생전)</button>
+          <button class="scenario-tab" onclick="setScenario('transfer', this)">🔵 양도 (매각)</button>
+        </div>
+
+        <div id="scenario-content"></div>
+      </div>
+
+      <!-- 대응 방안 -->
+      <div class="sim-card">
+        <div class="section-title" style="margin-bottom:16px;">💡 대응 방안</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div class="card" style="padding:16px;">
+            <div style="font-weight:700;margin-bottom:6px;">📅 생전 단계적 증여</div>
+            <div style="font-size:13px;color:var(--text-secondary);">배우자 6억원, 성인 자녀 5천만원 10년 주기 공제 활용. 매년 조금씩 이전하면 세금 크게 줄일 수 있습니다.</div>
+          </div>
+          <div class="card" style="padding:16px;">
+            <div style="font-weight:700;margin-bottom:6px;">🛡️ 종신보험 활용</div>
+            <div style="font-size:13px;color:var(--text-secondary);">상속세 재원 마련을 위한 종신보험 가입. 갑작스러운 상속 시 현금 없이도 세금 납부 가능.</div>
+          </div>
+          <div class="card" style="padding:16px;">
+            <div style="font-weight:700;margin-bottom:6px;">🏆 가업상속공제 요건 갖추기</div>
+            <div style="font-size:13px;color:var(--text-secondary);">최대 600억원 공제. 대표자 10년 이상 경영, 상속인 사전 가업 종사 등 요건 사전 준비 필요.</div>
+          </div>
+        </div>
+        <div style="margin-top:16px;text-align:center;">
+          <button class="btn btn-primary" onclick="showToast('전문가 연결 요청이 접수되었습니다.', 'success')">🤝 세무·법무 전문가 상담받기</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="disclaimer">
+      본 시뮬레이션은 간이 추정값으로 참고 목적으로만 활용하시기 바랍니다. 실제 세액은 다양한 요소에 따라 달라지며, 정확한 계산은 반드시 세무사와 상담하시기 바랍니다.
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+  let simData = {};
+  let currentScenario = 'inherit';
+
+  function formatWon(n) {
+    if (n >= 100000000) return `${(n/100000000).toFixed(1)}억원`;
+    if (n >= 10000) return `${Math.round(n/10000).toLocaleString()}만원`;
+    return `${n.toLocaleString()}원`;
+  }
+
+  function calculate() {
+    const shares = parseFloat(document.getElementById('total-shares').value) || 0;
+    const ratio = parseFloat(document.getElementById('owner-ratio').value) || 100;
+    const assets = parseFloat(document.getElementById('net-assets').value) || 0;
+    if (!shares || !assets) return;
+
+    const perShare = Math.round(assets / shares);
+    const ownerShares = Math.round(shares * ratio / 100);
+    const ownerValue = perShare * ownerShares;
+
+    simData = { shares, ratio, assets, perShare, ownerShares, ownerValue };
+
+    document.getElementById('r-per-share').textContent = `${perShare.toLocaleString()}원`;
+    document.getElementById('r-owner-value').textContent = formatWon(ownerValue);
+    document.getElementById('r-total-value').textContent = formatWon(assets);
+    document.getElementById('result-section').style.display = 'block';
+
+    renderScenario(currentScenario);
+  renderSoleBanner([
+    '비상장주식 가치평가는 법인사업자에 해당합니다.',
+    '개인사업자는 사업용 자산에 대한 양도소득세, 증여세 등 별도 기준이 적용됩니다. 세무사 상담을 권장합니다.'
+  ]);
+  }
+
+  function calcInheritTax(value) {
+    // 간이 상속세 계산 (기초공제 2억 + 인적공제 적용 전 단순 계산)
+    const family = document.getElementById('family').value;
+    let deduction = 200000000; // 기본 기초공제 2억
+    if (family === 'spouse') deduction += 500000000;
+    if (family === 'child') deduction += 50000000;
+    if (family === 'both') deduction += 550000000;
+    const taxBase = Math.max(0, value - deduction);
+    let tax = 0;
+    if (taxBase <= 100000000) tax = taxBase * 0.1;
+    else if (taxBase <= 500000000) tax = 10000000 + (taxBase-100000000)*0.2;
+    else if (taxBase <= 1000000000) tax = 90000000 + (taxBase-500000000)*0.3;
+    else if (taxBase <= 3000000000) tax = 240000000 + (taxBase-1000000000)*0.4;
+    else tax = 1040000000 + (taxBase-3000000000)*0.5;
+    return Math.round(tax);
+  }
+
+  function setScenario(scenario, btn) {
+    currentScenario = scenario;
+    document.querySelectorAll('.scenario-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderScenario(scenario);
+  }
+
+  function renderScenario(scenario) {
+    if (!simData.ownerValue) return;
+    const v = simData.ownerValue;
+    let html = '';
+
+    if (scenario === 'inherit') {
+      const tax = calcInheritTax(v);
+      html = `
+        <div class="risk-grid">
+          <div class="risk-item" style="border-color:rgba(232,90,74,0.3);">
+            <div class="risk-title">🔴 예상 상속세</div>
+            <div class="risk-amount" style="color:var(--danger);">${formatWon(tax)}</div>
+            <div class="risk-desc">신고기한: 상속 개시일로부터 6개월 이내<br>현금 없으면 지분 매각 또는 분납 처리</div>
+          </div>
+          <div class="risk-item">
+            <div class="risk-title">⚠️ 주의사항</div>
+            <div class="risk-desc" style="margin-top:4px;">
+              · 가족 구성에 따라 공제 금액 달라짐<br>
+              · 배우자 상속공제 최소 5억원<br>
+              · 가업상속공제 최대 600억원<br>
+              · 신고 기한 넘기면 가산세 부과
+            </div>
+          </div>
+        </div>`;
+    } else if (scenario === 'gift') {
+      const giftTax = Math.round(Math.max(0, v - 50000000) * 0.2);
+      html = `
+        <div class="risk-grid">
+          <div class="risk-item" style="border-color:rgba(232,164,74,0.3);">
+            <div class="risk-title">🟡 예상 증여세 (자녀 1인 기준)</div>
+            <div class="risk-amount" style="color:var(--warning);">${formatWon(giftTax)}</div>
+            <div class="risk-desc">성인 자녀 공제: 5천만원 (10년 합산)<br>신고기한: 증여일이 속하는 달의 말일로부터 3개월</div>
+          </div>
+          <div class="risk-item">
+            <div class="risk-title">💡 절세 포인트</div>
+            <div class="risk-desc" style="margin-top:4px;">
+              · 10년마다 공제 리셋<br>
+              · 주식가치 낮을 때 증여 유리<br>
+              · 배우자 증여공제 6억원<br>
+              · 분산 증여로 세율 낮추기
+            </div>
+          </div>
+        </div>`;
+    } else {
+      const transferTax = Math.round(v * 0.22);
+      html = `
+        <div class="risk-grid">
+          <div class="risk-item" style="border-color:rgba(74,111,165,0.3);">
+            <div class="risk-title">🔵 예상 양도소득세</div>
+            <div class="risk-amount" style="color:var(--accent-blue-light);">${formatWon(transferTax)}</div>
+            <div class="risk-desc">대주주 기준 세율 22% 적용 (간이 추정)<br>신고기한: 양도일이 속하는 달의 말일로부터 2개월</div>
+          </div>
+          <div class="risk-item">
+            <div class="risk-title">⚠️ 주의사항</div>
+            <div class="risk-desc" style="margin-top:4px;">
+              · 대주주 여부에 따라 세율 상이<br>
+              · 취득가액 입증 자료 보관 필수<br>
+              · 거래 전 반드시 세무사 상담<br>
+              · 주식가치평가 선행 필수
+            </div>
+          </div>
+        </div>`;
+    }
+    document.getElementById('scenario-content').innerHTML = html;
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PinPoint - 연간 캘린더</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body { display:flex; min-height:100vh; }
+    .sidebar { width:220px; min-height:100vh; background:var(--bg-secondary); border-right:1px solid var(--border); display:flex; flex-direction:column; padding:0; position:fixed; left:0; top:0; z-index:50; }
+    .sidebar-logo { padding:20px 24px; font-size:20px; font-weight:800; color:var(--accent-gold); border-bottom:1px solid var(--border); text-decoration:none; display:block; }
+    .sidebar-logo span { color:var(--text-primary); }
+    .sidebar-section { padding:16px 12px 8px; font-size:10px; font-weight:700; letter-spacing:1px; color:var(--text-muted); text-transform:uppercase; }
+    .sidebar-nav { padding:0 12px; flex:1; }
+    .sidebar-link { display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:var(--radius-sm); font-size:14px; color:var(--text-secondary); text-decoration:none; transition:all 0.15s; margin-bottom:2px; }
+    .sidebar-link:hover { background:var(--bg-card); color:var(--text-primary); }
+    .sidebar-link.active { background:rgba(201,168,76,0.1); color:var(--accent-gold); }
+    .sidebar-link .icon { width:20px; text-align:center; font-size:16px; }
+    .sidebar-footer { padding:16px; border-top:1px solid var(--border); font-size:12px; color:var(--text-muted); }
+    .main-content { margin-left:220px; flex:1; }
+    .topbar { height:56px; background:var(--bg-secondary); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 32px; position:sticky; top:0; z-index:40; }
+    .topbar-title { font-size:15px; font-weight:700; }
+    .page { padding:28px 32px; }
+
+    /* 범례 */
+    .legend {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 28px;
+      padding: 14px 18px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+    .legend-item { display:flex; align-items:center; gap:7px; font-size:13px; color:var(--text-secondary); }
+    .legend-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+
+    /* 타임라인 */
+    .timeline-wrap {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      margin-bottom: 24px;
+      overflow-x: auto;
+    }
+    .timeline-header {
+      display: grid;
+      grid-template-columns: 100px repeat(12, 1fr);
+      gap: 0;
+      margin-bottom: 12px;
+    }
+    .tl-label { font-size:11px; font-weight:700; color:var(--text-muted); padding:0 4px; }
+    .tl-month {
+      font-size:12px;
+      font-weight:700;
+      color:var(--text-secondary);
+      text-align:center;
+      padding:6px 2px;
+      border-radius:4px;
+    }
+    .tl-month.current {
+      background: rgba(201,168,76,0.15);
+      color: var(--accent-gold);
+    }
+    .timeline-row {
+      display: grid;
+      grid-template-columns: 100px repeat(12, 1fr);
+      gap: 0;
+      margin-bottom: 6px;
+      align-items: center;
+      min-height: 32px;
+    }
+    .tl-cat-label {
+      font-size:12px;
+      font-weight:700;
+      color:var(--text-secondary);
+      padding-right:8px;
+      display:flex;
+      align-items:center;
+      gap:5px;
+    }
+    .tl-cell {
+      padding: 2px;
+      min-height: 32px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .tl-event {
+      width:100%;
+      padding: 4px 6px;
+      border-radius: 4px;
+      font-size:10px;
+      font-weight:600;
+      text-align:center;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      cursor:pointer;
+      transition:all 0.15s;
+    }
+    .tl-event:hover { filter:brightness(1.2); transform:scaleY(1.1); }
+    .ev-tax { background:rgba(232,90,74,0.2); color:#e85a4a; border:1px solid rgba(232,90,74,0.3); }
+    .ev-legal { background:rgba(74,111,165,0.2); color:#6b8fc7; border:1px solid rgba(74,111,165,0.3); }
+    .ev-labor { background:rgba(76,175,130,0.2); color:#4caf82; border:1px solid rgba(76,175,130,0.3); }
+    .ev-stock { background:rgba(201,168,76,0.2); color:#c9a84c; border:1px solid rgba(201,168,76,0.3); }
+    .tl-divider {
+      grid-column: 1/-1;
+      height:1px;
+      background:var(--border);
+      margin: 4px 0;
+    }
+
+    /* 월별 상세 카드 그리드 */
+    .month-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+    }
+    .month-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: all 0.2s;
+    }
+    .month-card.current-month {
+      border-color: rgba(201,168,76,0.4);
+      box-shadow: 0 0 20px rgba(201,168,76,0.08);
+    }
+    .month-card:hover { border-color:var(--border-accent); }
+    .month-header {
+      padding: 14px 18px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      border-bottom:1px solid var(--border);
+    }
+    .month-name {
+      font-size:15px;
+      font-weight:800;
+    }
+    .month-name.current { color:var(--accent-gold); }
+    .month-count {
+      font-size:11px;
+      color:var(--text-muted);
+    }
+    .month-events {
+      padding: 12px;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    .month-event {
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding:7px 10px;
+      border-radius:6px;
+      font-size:12px;
+    }
+    .month-event .ev-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+    .dot-tax { background:var(--danger); }
+    .dot-legal { background:var(--accent-blue-light); }
+    .dot-labor { background:var(--success); }
+    .dot-stock { background:var(--accent-gold); }
+    .month-event .ev-name { font-weight:600; flex:1; }
+    .month-event .ev-day { font-size:11px; color:var(--text-muted); }
+    .month-empty {
+      padding: 16px;
+      text-align:center;
+      font-size:12px;
+      color:var(--text-muted);
+    }
+
+    /* 뷰 전환 */
+    .view-toggle {
+      display:flex;
+      gap:8px;
+    }
+    .view-btn {
+      padding:6px 14px;
+      border-radius:6px;
+      font-size:13px;
+      border:1px solid var(--border);
+      background:var(--bg-card);
+      color:var(--text-secondary);
+      cursor:pointer;
+      transition:all 0.15s;
+    }
+    .view-btn.active {
+      background:rgba(201,168,76,0.1);
+      border-color:rgba(201,168,76,0.4);
+      color:var(--accent-gold);
+    }
+
+    @media(max-width:768px) {
+      .sidebar{display:none;}
+      .main-content{margin-left:0;}
+      .page{padding:16px;}
+      .timeline-wrap{display:none;}
+    }
+  </style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <a href="index.html" class="sidebar-logo">Pin<span>Point</span>.</a>
+  <nav class="sidebar-nav">
+    <div class="sidebar-section">메인</div>
+    <a href="dashboard.html" class="sidebar-link"><span class="icon">🏠</span> 대시보드</a>
+    <a href="calendar.html" class="sidebar-link active"><span class="icon">📅</span> 연간 캘린더</a>
+    <div class="sidebar-section">정기 일정형</div>
+    <a href="legal.html" class="sidebar-link"><span class="icon">🏢</span> 법인 법무</a>
+    <a href="tax.html" class="sidebar-link"><span class="icon">🧾</span> 세무 이슈</a>
+    <a href="labor.html" class="sidebar-link"><span class="icon">⚖️</span> 노무 이슈</a>
+    <a href="stock.html" class="sidebar-link"><span class="icon">📈</span> 주식 / 자본</a>
+    <div class="sidebar-section">수시 조회형</div>
+    <a href="subsidy.html" class="sidebar-link"><span class="icon">💰</span> 고용 지원금</a>
+    <a href="cert.html" class="sidebar-link"><span class="icon">🏆</span> 기업 인증</a>
+    <a href="gov.html" class="sidebar-link"><span class="icon">🏛️</span> 정부지원사업</a>
+    <div class="sidebar-section">성장</div>
+    <a href="quiz.html" class="sidebar-link"><span class="icon">🎯</span> 퀴즈 & 뱃지</a>
+    <a href="knowledge.html" class="sidebar-link"><span class="icon">📚</span> 역량강화 카드</a>
+  </nav>
+  <div class="sidebar-footer">v0.1 Beta</div>
+</aside>
+
+<div class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">📅 연간 정기 일정</span>
+    <div class="view-toggle">
+      <button class="view-btn active" onclick="setView('timeline', this)">타임라인</button>
+      <button class="view-btn" onclick="setView('month', this)">월별 보기</button>
+    </div>
+  </div>
+
+  <div class="page">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
+      <div>
+        <h2 style="font-size:22px; font-weight:800; margin-bottom:4px;">
+          <span id="current-year"></span>년 정기 업무 캘린더
+        </h2>
+        <p style="font-size:13px; color:var(--text-secondary);">1년 치 정기 업무를 한눈에 확인하세요</p>
+      </div>
+    </div>
+
+    <!-- 범례 -->
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--danger)"></div> 세무</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--accent-blue-light)"></div> 법무</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--success)"></div> 노무</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--accent-gold)"></div> 주식/자본</div>
+      <div class="legend-item" style="margin-left:auto;">
+        <div class="legend-dot" style="background:var(--accent-gold); opacity:0.5;"></div>
+        <span style="color:var(--accent-gold);">● 이번 달</span>
+      </div>
+    </div>
+
+    <!-- 타임라인 뷰 -->
+    <div id="timeline-view">
+      <div class="timeline-wrap">
+        <div id="timeline-inner"></div>
+      </div>
+    </div>
+
+    <!-- 월별 뷰 -->
+    <div id="month-view" style="display:none;">
+      <div class="month-grid" id="month-grid"></div>
+    </div>
+
+    <div class="disclaimer" style="margin-top:20px;">
+      본 일정은 12월 결산 법인사업자 기준이며, 결산월 및 사업 형태에 따라 다를 수 있습니다. 정확한 일정은 세무사·법무사 등 전문가에게 확인하시기 바랍니다.
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+  const currentMonth = new Date().getMonth() + 1;
+  const currentYear = new Date().getFullYear();
+  document.getElementById('current-year').textContent = currentYear;
+
+  // 전체 연간 일정 데이터
+  const annualSchedule = [
+    // 세무
+    { month:1,  name:'부가세 확정신고', cat:'tax', desc:'2기 확정 (7~12월)', day:25 },
+    { month:3,  name:'법인세 신고', cat:'tax', desc:'12월 결산법인', day:31 },
+    { month:4,  name:'부가세 예정신고', cat:'tax', desc:'1기 예정 (1~3월)', day:25 },
+    { month:7,  name:'부가세 확정신고', cat:'tax', desc:'1기 확정 (1~6월)', day:25 },
+    { month:10, name:'부가세 예정신고', cat:'tax', desc:'2기 예정 (7~9월)', day:25 },
+    { month:12, name:'결산 준비', cat:'tax', desc:'연간 장부 마감', day:31 },
+    // 법무
+    { month:3,  name:'정기주총', cat:'legal', desc:'결산 후 3개월 이내', day:31 },
+    { month:4,  name:'임원보수계약서', cat:'legal', desc:'주총 후 작성·보관', day:30 },
+    { month:6,  name:'결산공고', cat:'legal', desc:'외감대상법인', day:30 },
+    { month:12, name:'임원 임기 체크', cat:'legal', desc:'만료 임원 중임 준비', day:31 },
+    // 노무
+    { month:1,  name:'연말정산', cat:'labor', desc:'근로소득 정산', day:31 },
+    { month:8,  name:'최저임금 고시', cat:'labor', desc:'내년 최저임금 확인', day:5 },
+    { month:8,  name:'법정교육 점검', cat:'labor', desc:'성희롱·괴롭힘 교육', day:31 },
+    { month:9,  name:'취업규칙 검토', cat:'labor', desc:'최저임금 반영 여부', day:30 },
+    { month:10, name:'연차사용촉진', cat:'labor', desc:'만료 6개월 전 촉진', day:31 },
+    // 주식
+    { month:7,  name:'주식가치평가', cat:'stock', desc:'결산기준 연간 확인', day:31 },
+  ];
+
+  const catStyle = {
+    tax:   { cls:'ev-tax',   dot:'dot-tax',   label:'🧾 세무' },
+    legal: { cls:'ev-legal', dot:'dot-legal', label:'🏢 법무' },
+    labor: { cls:'ev-labor', dot:'dot-labor', label:'⚖️ 노무' },
+    stock: { cls:'ev-stock', dot:'dot-stock', label:'📈 주식' }
+  };
+
+  // 타임라인 렌더링
+  function renderTimeline() {
+    const months = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+    const cats = ['tax','legal','labor','stock'];
+    const catLabels = { tax:'🧾 세무', legal:'🏢 법무', labor:'⚖️ 노무', stock:'📈 주식' };
+
+    let html = '';
+
+    // 헤더
+    html += '<div class="timeline-header">';
+    html += '<div class="tl-label"></div>';
+    months.forEach((m, i) => {
+      const isCurrent = (i+1) === currentMonth;
+      html += `<div class="tl-month ${isCurrent ? 'current' : ''}">${m}</div>`;
+    });
+    html += '</div>';
+
+    // 각 카테고리별 행
+    cats.forEach(cat => {
+      html += '<div class="timeline-row">';
+      html += `<div class="tl-cat-label">${catLabels[cat]}</div>`;
+      for (let m = 1; m <= 12; m++) {
+        const events = annualSchedule.filter(e => e.month === m && e.cat === cat);
+        html += '<div class="tl-cell">';
+        if (events.length > 0) {
+          events.forEach(ev => {
+            html += `<div class="tl-event ${catStyle[cat].cls}" title="${ev.desc} (${ev.day}일)">${ev.name}</div>`;
+          });
+        }
+        html += '</div>';
+      }
+      html += '</div>';
+      html += '<div class="tl-divider"></div>';
+    });
+
+    // 현재 월 표시선
+    document.getElementById('timeline-inner').innerHTML = html;
+  }
+
+  // 월별 카드 렌더링
+  function renderMonthGrid() {
+    const months = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+    let html = '';
+    months.forEach((mName, i) => {
+      const m = i + 1;
+      const isCurrent = m === currentMonth;
+      const events = annualSchedule.filter(e => e.month === m);
+      html += `
+        <div class="month-card ${isCurrent ? 'current-month' : ''}">
+          <div class="month-header">
+            <div class="month-name ${isCurrent ? 'current' : ''}">${mName} ${isCurrent ? '← 이번 달' : ''}</div>
+            <div class="month-count">${events.length}건</div>
+          </div>
+          <div class="month-events">
+            ${events.length === 0
+              ? '<div class="month-empty">정기 일정 없음</div>'
+              : events.map(ev => `
+                <div class="month-event">
+                  <div class="ev-dot ${catStyle[ev.cat].dot}"></div>
+                  <div class="ev-name">${ev.name}</div>
+                  <div class="ev-day">${ev.day}일</div>
+                </div>
+              `).join('')
+            }
+          </div>
+        </div>
+      `;
+    });
+    document.getElementById('month-grid').innerHTML = html;
+  }
+
+  // 뷰 전환
+  function setView(view, btn) {
+    document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('timeline-view').style.display = view === 'timeline' ? 'block' : 'none';
+    document.getElementById('month-view').style.display = view === 'month' ? 'block' : 'none';
+  }
+
+  // 초기화
+  renderTimeline();
+  renderMonthGrid();
+
+  // 이번 달 스크롤
+  setTimeout(() => {
+    const currentEl = document.querySelector('.month-card.current-month');
+    if (currentEl) currentEl.scrollIntoView({ behavior:'smooth', block:'nearest' });
+  }, 300);
+</script>
+</body>
+</html>

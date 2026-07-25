@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PinPoint - 고용 지원금</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body { display:flex; min-height:100vh; }
+    .sidebar { width:220px; min-height:100vh; background:var(--bg-secondary); border-right:1px solid var(--border); display:flex; flex-direction:column; padding:0; position:fixed; left:0; top:0; z-index:50; }
+    .sidebar-logo { padding:20px 24px; font-size:20px; font-weight:800; color:var(--accent-gold); border-bottom:1px solid var(--border); text-decoration:none; display:block; }
+    .sidebar-logo span { color:var(--text-primary); }
+    .sidebar-section { padding:16px 12px 8px; font-size:10px; font-weight:700; letter-spacing:1px; color:var(--text-muted); text-transform:uppercase; }
+    .sidebar-nav { padding:0 12px; flex:1; }
+    .sidebar-link { display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:var(--radius-sm); font-size:14px; color:var(--text-secondary); text-decoration:none; transition:all 0.15s; margin-bottom:2px; }
+    .sidebar-link:hover { background:var(--bg-card); color:var(--text-primary); }
+    .sidebar-link.active { background:rgba(201,168,76,0.1); color:var(--accent-gold); }
+    .sidebar-link .icon { width:20px; text-align:center; font-size:16px; }
+    .sidebar-footer { padding:16px; border-top:1px solid var(--border); font-size:12px; color:var(--text-muted); }
+    .main-content { margin-left:220px; flex:1; }
+    .topbar { height:56px; background:var(--bg-secondary); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 32px; position:sticky; top:0; z-index:40; }
+    .topbar-title { font-size:15px; font-weight:700; }
+    .page { padding:32px; }
+
+    /* 사다리타기 */
+    .ladder-container { max-width: 640px; }
+    .ladder-step {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      margin-bottom: 20px;
+    }
+    .ladder-question {
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    .ladder-options { display: flex; flex-direction: column; gap: 10px; }
+    .ladder-option {
+      padding: 14px 18px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.15s;
+      color: var(--text-primary);
+    }
+    .ladder-option:hover {
+      border-color: var(--accent-gold);
+      background: rgba(201,168,76,0.05);
+    }
+    .ladder-option.selected {
+      border-color: var(--accent-gold);
+      background: rgba(201,168,76,0.1);
+      color: var(--accent-gold);
+    }
+
+    /* 결과 카드 */
+    .result-card {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: 28px;
+      margin-bottom: 20px;
+    }
+    .result-card.success { border: 1px solid rgba(76,175,130,0.4); }
+    .result-card.fail { border: 1px solid var(--border); }
+    .result-icon { font-size: 40px; margin-bottom: 12px; }
+    .result-title { font-size: 20px; font-weight: 800; margin-bottom: 16px; }
+    .result-detail { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+    .result-row { display: flex; gap: 12px; font-size: 14px; }
+    .result-label { color: var(--text-muted); min-width: 80px; }
+    .result-value { color: var(--text-primary); font-weight: 600; }
+    .result-note { font-size: 13px; color: var(--text-secondary); background: var(--bg-secondary); border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 16px; }
+    .result-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    /* 진행 표시 */
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+    .breadcrumb span { color: var(--text-secondary); }
+    .breadcrumb .sep { color: var(--text-muted); }
+  </style>
+</head>
+<body>
+<aside class="sidebar">
+  <a href="index.html" class="sidebar-logo">Pin<span>Point</span>.</a>
+  <nav class="sidebar-nav">
+    <div class="sidebar-section">메인</div>
+    <a href="dashboard.html" class="sidebar-link"><span class="icon">🏠</span> 대시보드</a>
+    <div class="sidebar-section">카테고리</div>
+    <a href="legal.html" class="sidebar-link"><span class="icon">🏢</span> 법인 법무</a>
+    <a href="stock.html" class="sidebar-link"><span class="icon">📈</span> 주식 / 자본</a>
+    <a href="subsidy.html" class="sidebar-link active"><span class="icon">💰</span> 고용 지원금</a>
+    <a href="labor.html" class="sidebar-link"><span class="icon">⚖️</span> 노무 이슈</a>
+    <a href="tax.html" class="sidebar-link"><span class="icon">🧾</span> 세무 이슈</a>
+    <a href="cert.html" class="sidebar-link"><span class="icon">🏆</span> 기업 인증</a>
+    <a href="gov.html" class="sidebar-link"><span class="icon">🏛️</span> 정부지원사업</a>
+    <div class="sidebar-section">성장</div>
+    <a href="quiz.html" class="sidebar-link"><span class="icon">🎯</span> 퀴즈 & 뱃지</a>
+    <a href="knowledge.html" class="sidebar-link"><span class="icon">📚</span> 역량강화 카드</a>
+  </nav>
+  <div class="sidebar-footer">v0.1 Beta</div>
+</aside>
+
+<div class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">💰 고용 지원금 알아보기</span>
+  </div>
+  <div class="page">
+
+    <div style="margin-bottom:28px;">
+      <h2 style="font-size:22px; font-weight:800; margin-bottom:8px;">고용 지원금 사다리타기</h2>
+      <p style="color:var(--text-secondary); font-size:14px;">몇 가지 질문에 답하면 해당 가능성 있는 지원금을 찾아드립니다.</p>
+    </div>
+
+    <!-- 진행 경로 -->
+    <div class="breadcrumb" id="breadcrumb">
+      <span>시작</span>
+    </div>
+
+    <!-- 사다리타기 영역 -->
+    <div class="ladder-container" id="ladder-container">
+      <!-- JS 렌더링 -->
+    </div>
+
+    <div class="disclaimer">
+      본 결과는 참고용이며, 실제 지원금 수령 여부는 요건·심사에 따라 달라질 수 있습니다. 정확한 확인은 고용24(1350) 또는 관할 고용센터에 문의하세요.
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+  let currentNode = 'start';
+  let pathHistory = [];
+  let labelHistory = ['시작'];
+
+  function renderStep(nodeKey) {
+    const node = supportFundTree[nodeKey];
+    const container = document.getElementById('ladder-container');
+
+    if (node.type === 'result') {
+      renderResult(node);
+      return;
+    }
+
+    container.innerHTML = `
+      <div class="ladder-step">
+        <div class="ladder-question">Q. ${node.question}</div>
+        <div class="ladder-options">
+          ${node.options.map((opt, i) => `
+            <button class="ladder-option" onclick="selectOption('${opt.next}', '${opt.label.replace(/'/g, "\\'")}', this)">
+              ${opt.label}
+            </button>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  function selectOption(nextKey, label, btn) {
+    btn.classList.add('selected');
+    btn.closest('.ladder-step').querySelectorAll('.ladder-option').forEach(o => {
+      if (o !== btn) { o.disabled = true; o.style.opacity = '0.4'; }
+    });
+    pathHistory.push(currentNode);
+    labelHistory.push(label.replace(/[🎯💼👶⚠️🏢]/g, '').trim());
+    currentNode = nextKey;
+    updateBreadcrumb();
+    setTimeout(() => {
+      const node = supportFundTree[nextKey];
+      if (node.type === 'result') {
+        renderResult(node);
+      } else {
+        const newStep = document.createElement('div');
+        newStep.innerHTML = `
+          <div class="ladder-step">
+            <div class="ladder-question">Q. ${node.question}</div>
+            <div class="ladder-options">
+              ${node.options.map((opt, i) => `
+                <button class="ladder-option" onclick="selectOption('${opt.next}', '${opt.label.replace(/'/g, "\\'")}', this)">
+                  ${opt.label}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        `;
+        document.getElementById('ladder-container').appendChild(newStep.firstElementChild);
+        newStep.firstElementChild && newStep.firstElementChild.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }, 300);
+  }
+
+  function renderResult(node) {
+    const container = document.getElementById('ladder-container');
+    const resultDiv = document.createElement('div');
+    if (node.success) {
+      resultDiv.innerHTML = `
+        <div class="result-card success">
+          <div class="result-icon">✅</div>
+          <div class="result-title">${node.title}</div>
+          <div class="result-detail">
+            ${node.amount ? `<div class="result-row"><span class="result-label">지원금액</span><span class="result-value">${node.amount}</span></div>` : ''}
+            ${node.deadline ? `<div class="result-row"><span class="result-label">신청기한</span><span class="result-value">${node.deadline}</span></div>` : ''}
+          </div>
+          ${node.note ? `<div class="result-note">⚠️ ${node.note}</div>` : ''}
+          <div class="result-actions">
+            ${node.link ? `<a href="${node.link}" target="_blank" class="btn btn-primary">신청하러 가기 →</a>` : ''}
+            <button class="btn btn-ghost" onclick="resetLadder()">다시 알아보기</button>
+          </div>
+        </div>
+      `;
+    } else {
+      resultDiv.innerHTML = `
+        <div class="result-card fail">
+          <div class="result-icon">ℹ️</div>
+          <div class="result-title">${node.title}</div>
+          <p style="color:var(--text-secondary); font-size:14px; margin-bottom:20px;">${node.message}</p>
+          <div class="result-actions">
+            <a href="https://www.work24.go.kr" target="_blank" class="btn btn-outline">고용24 바로가기</a>
+            <button class="btn btn-ghost" onclick="resetLadder()">다시 알아보기</button>
+          </div>
+        </div>
+      `;
+    }
+    container.appendChild(resultDiv.firstElementChild);
+    resultDiv.firstElementChild && resultDiv.firstElementChild.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function updateBreadcrumb() {
+    document.getElementById('breadcrumb').innerHTML = labelHistory.map((l, i) => `
+      ${i > 0 ? '<span class="sep">›</span>' : ''}
+      <span>${l.length > 15 ? l.substring(0, 15) + '...' : l}</span>
+    `).join('');
+  }
+
+  function resetLadder() {
+    currentNode = 'start';
+    pathHistory = [];
+    labelHistory = ['시작'];
+    updateBreadcrumb();
+    renderStep('start');
+  }
+
+  // 초기화
+  renderStep('start');
+</script>
+</body>
+</html>

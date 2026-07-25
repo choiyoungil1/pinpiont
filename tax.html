@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PinPoint - 세무 이슈</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body{display:flex;min-height:100vh;}
+    .sidebar{width:220px;min-height:100vh;background:var(--bg-secondary);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:0;position:fixed;left:0;top:0;z-index:50;}
+    .sidebar-logo{padding:20px 24px;font-size:20px;font-weight:800;color:var(--accent-gold);border-bottom:1px solid var(--border);text-decoration:none;display:block;}
+    .sidebar-logo span{color:var(--text-primary);}
+    .sidebar-section{padding:16px 12px 8px;font-size:10px;font-weight:700;letter-spacing:1px;color:var(--text-muted);text-transform:uppercase;}
+    .sidebar-nav{padding:0 12px;flex:1;}
+    .sidebar-link{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--radius-sm);font-size:14px;color:var(--text-secondary);text-decoration:none;transition:all 0.15s;margin-bottom:2px;}
+    .sidebar-link:hover{background:var(--bg-card);color:var(--text-primary);}
+    .sidebar-link.active{background:rgba(201,168,76,0.1);color:var(--accent-gold);}
+    .sidebar-link .icon{width:20px;text-align:center;font-size:16px;}
+    .sidebar-footer{padding:16px;border-top:1px solid var(--border);font-size:12px;color:var(--text-muted);}
+    .main-content{margin-left:220px;flex:1;}
+    .topbar{height:56px;background:var(--bg-secondary);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 32px;position:sticky;top:0;z-index:40;}
+    .topbar-title{font-size:15px;font-weight:700;}
+    .page{padding:28px 32px;}
+
+    .tax-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-bottom:20px;}
+    .tax-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;transition:all 0.2s;}
+    .tax-card:hover{border-color:var(--border-accent);}
+    .tax-card.urgent{border-color:rgba(232,90,74,0.4);}
+    .tax-card.upcoming{border-color:rgba(232,164,74,0.3);}
+    .tax-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+    .tax-name{font-size:15px;font-weight:700;}
+    .tax-desc{font-size:13px;color:var(--text-secondary);margin-bottom:10px;line-height:1.6;}
+    .tax-meta{display:flex;gap:8px;flex-wrap:wrap;}
+
+    .tip-list{display:flex;flex-direction:column;gap:12px;margin-top:16px;}
+    .tip-item{background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;}
+    .tip-header{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+    .tip-title{font-size:14px;font-weight:700;}
+    .tip-body{font-size:13px;color:var(--text-secondary);line-height:1.7;}
+    .tip-tag{font-size:11px;color:var(--accent-gold);background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.2);padding:2px 8px;border-radius:10px;}
+
+    @media(max-width:768px){.sidebar{display:none;}.main-content{margin-left:0;}.page{padding:16px;}}
+  </style>
+</head>
+<body>
+<aside class="sidebar">
+  <a href="index.html" class="sidebar-logo">Pin<span>Point</span>.</a>
+  <nav class="sidebar-nav">
+    <div class="sidebar-section">메인</div>
+    <a href="dashboard.html" class="sidebar-link"><span class="icon">🏠</span> 대시보드</a>
+    <a href="calendar.html" class="sidebar-link"><span class="icon">📅</span> 연간 캘린더</a>
+    <div class="sidebar-section">정기 일정형</div>
+    <a href="legal.html" class="sidebar-link"><span class="icon">🏢</span> 법인 법무</a>
+    <a href="tax.html" class="sidebar-link active"><span class="icon">🧾</span> 세무 이슈</a>
+    <a href="labor.html" class="sidebar-link"><span class="icon">⚖️</span> 노무 이슈</a>
+    <a href="stock.html" class="sidebar-link"><span class="icon">📈</span> 주식 / 자본</a>
+    <div class="sidebar-section">수시 조회형</div>
+    <a href="subsidy.html" class="sidebar-link"><span class="icon">💰</span> 고용 지원금</a>
+    <a href="cert.html" class="sidebar-link"><span class="icon">🏆</span> 기업 인증</a>
+    <a href="gov.html" class="sidebar-link"><span class="icon">🏛️</span> 정부지원사업</a>
+    <div class="sidebar-section">성장</div>
+    <a href="quiz.html" class="sidebar-link"><span class="icon">🎯</span> 퀴즈 & 뱃지</a>
+    <a href="knowledge.html" class="sidebar-link"><span class="icon">📚</span> 역량강화 카드</a>
+  </nav>
+  <div class="sidebar-footer">v0.1 Beta</div>
+</aside>
+
+<div class="main-content">
+  <div class="topbar"><span class="topbar-title">🧾 세무 이슈</span></div>
+  <div class="page">
+    <div style="margin-bottom:24px;">
+      <h2 style="font-size:22px;font-weight:800;margin-bottom:6px;">세무 이슈</h2>
+      <p style="color:var(--text-secondary);font-size:14px;">연간 세무 신고 일정과 절세 포인트를 확인하세요. (법인사업자 12월 결산 기준)</p>
+    </div>
+
+    <!-- 이번달 세무 일정 -->
+    <div class="card" style="padding:22px;margin-bottom:20px;">
+      <div class="section-header">
+        <div>
+          <div class="section-title">📅 연간 세무 신고 일정</div>
+          <div class="section-sub">법인사업자 12월 결산 기준</div>
+        </div>
+        <a href="calendar.html" class="btn btn-ghost btn-sm">전체 캘린더</a>
+      </div>
+      <div class="tax-grid" style="margin-top:16px;">
+        <div class="tax-card">
+          <div class="tax-header"><div class="tax-name">부가세 확정신고 (1월)</div><span class="badge badge-danger">연 2회</span></div>
+          <div class="tax-desc">신고기간: 1월 1일~25일<br>대상: 2기 확정 (7~12월 실적)</div>
+          <div class="tax-meta"><span class="tag">법인</span><span class="tag">개인</span></div>
+        </div>
+        <div class="tax-card">
+          <div class="tax-header"><div class="tax-name">법인세 신고 (3월)</div><span class="badge badge-danger">연 1회</span></div>
+          <div class="tax-desc">신고기간: 3월 1일~31일<br>12월 결산법인 기준. 성실신고 확인 시 4월 말</div>
+          <div class="tax-meta"><span class="tag">법인</span></div>
+        </div>
+        <div class="tax-card">
+          <div class="tax-header"><div class="tax-name">부가세 예정신고 (4월)</div><span class="badge badge-warning">연 2회</span></div>
+          <div class="tax-desc">신고기간: 4월 1일~25일<br>대상: 1기 예정 (1~3월 실적)</div>
+          <div class="tax-meta"><span class="tag">법인</span></div>
+        </div>
+        <div class="tax-card">
+          <div class="tax-header"><div class="tax-name">부가세 확정신고 (7월)</div><span class="badge badge-danger">연 2회</span></div>
+          <div class="tax-desc">신고기간: 7월 1일~25일<br>대상: 1기 확정 (1~6월 실적)</div>
+          <div class="tax-meta"><span class="tag">법인</span><span class="tag">개인</span></div>
+        </div>
+        <div class="tax-card">
+          <div class="tax-header"><div class="tax-name">부가세 예정신고 (10월)</div><span class="badge badge-warning">연 2회</span></div>
+          <div class="tax-desc">신고기간: 10월 1일~25일<br>대상: 2기 예정 (7~9월 실적)</div>
+          <div class="tax-meta"><span class="tag">법인</span></div>
+        </div>
+        <div class="tax-card">
+          <div class="tax-header"><div class="tax-name">원천세 신고</div><span class="badge badge-gold" style="background:rgba(201,168,76,0.15);color:var(--accent-gold);border:1px solid rgba(201,168,76,0.3);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;">매월</span></div>
+          <div class="tax-desc">매월 10일까지 전월분 신고·납부<br>반기납부 사업장은 1월, 7월</div>
+          <div class="tax-meta"><span class="tag">급여</span><span class="tag">원천징수</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 절세 팁 -->
+    <div class="card" style="padding:22px;margin-bottom:20px;">
+      <div class="section-header">
+        <div>
+          <div class="section-title">💡 이달의 절세 포인트</div>
+          <div class="section-sub">기장처에서 잘 안 알려주는 것들</div>
+        </div>
+      </div>
+      <div class="tip-list">
+        <div class="tip-item">
+          <div class="tip-header">
+            <span style="font-size:20px;">🏷️</span>
+            <div class="tip-title">중소기업 특별세액감면</div>
+            <span class="tip-tag">법인세 신고 시</span>
+          </div>
+          <div class="tip-body">업종·지역에 따라 법인세 5~30% 감면. 법인세 신고 시 반드시 해당 여부 확인. 신청 빠뜨리면 소급 적용 어려움.</div>
+        </div>
+        <div class="tip-item">
+          <div class="tip-header">
+            <span style="font-size:20px;">🔬</span>
+            <div class="tip-title">연구인력개발비 세액공제</div>
+            <span class="tip-tag">연구활동 있는 경우</span>
+          </div>
+          <div class="tip-body">연구개발 활동이 있다면 인건비·재료비 세액공제 가능 (중소기업 최대 25%). 기업부설연구소 인정 받으면 공제율 높아짐.</div>
+        </div>
+        <div class="tip-item">
+          <div class="tip-header">
+            <span style="font-size:20px;">👥</span>
+            <div class="tip-title">고용증가 세액공제</div>
+            <span class="tip-tag">직원 늘었다면</span>
+          </div>
+          <div class="tip-body">전년 대비 상시근로자 수 증가 시 1인당 세액공제. 중소기업 기준 청년은 최대 1,100만원/인 공제 가능.</div>
+        </div>
+        <div class="tip-item">
+          <div class="tip-header">
+            <span style="font-size:20px;">🏢</span>
+            <div class="tip-title">접대비 한도 체크</div>
+            <span class="tip-tag">분기 확인</span>
+          </div>
+          <div class="tip-body">기본 한도: 연 1,200만원 (중소기업 2,400만원) + 수입금액 기준 추가. 한도 초과분은 손금 불산입 → 법인세 증가.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="disclaimer">
+      세무 관련 정보는 참고용이며, 실제 신고·납부는 담당 세무사와 상담하시기 바랍니다. 세법은 수시로 개정되므로 최신 내용 확인이 필요합니다.
+    </div>
+  </div>
+</div>
+<script src="app.js"></script>
+<script>
+  renderSoleBanner([
+    '법인세 신고(3월)는 법인사업자에만 해당됩니다. 개인사업자는 종합소득세(5월) 신고입니다.',
+    '부가세 예정신고(4월/10월)는 법인사업자 의무이며, 개인사업자는 예정고지 납부로 대체됩니다.',
+    '원천세, 부가세 확정신고는 개인사업자도 해당됩니다.'
+  ]);
+</script></body>
+</html>

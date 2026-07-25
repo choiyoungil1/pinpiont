@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PinPoint - 퀴즈 & 뱃지</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body { display:flex; min-height:100vh; }
+    .sidebar { width:220px; min-height:100vh; background:var(--bg-secondary); border-right:1px solid var(--border); display:flex; flex-direction:column; padding:0; position:fixed; left:0; top:0; z-index:50; }
+    .sidebar-logo { padding:20px 24px; font-size:20px; font-weight:800; color:var(--accent-gold); border-bottom:1px solid var(--border); text-decoration:none; display:block; }
+    .sidebar-logo span { color:var(--text-primary); }
+    .sidebar-section { padding:16px 12px 8px; font-size:10px; font-weight:700; letter-spacing:1px; color:var(--text-muted); text-transform:uppercase; }
+    .sidebar-nav { padding:0 12px; flex:1; }
+    .sidebar-link { display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:var(--radius-sm); font-size:14px; color:var(--text-secondary); text-decoration:none; transition:all 0.15s; margin-bottom:2px; }
+    .sidebar-link:hover { background:var(--bg-card); color:var(--text-primary); }
+    .sidebar-link.active { background:rgba(201,168,76,0.1); color:var(--accent-gold); }
+    .sidebar-link .icon { width:20px; text-align:center; font-size:16px; }
+    .sidebar-footer { padding:16px; border-top:1px solid var(--border); font-size:12px; color:var(--text-muted); }
+    .main-content { margin-left:220px; flex:1; }
+    .topbar { height:56px; background:var(--bg-secondary); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 32px; position:sticky; top:0; z-index:40; }
+    .topbar-title { font-size:15px; font-weight:700; }
+    .page { padding:32px; }
+
+    .quiz-page-grid {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 24px;
+    }
+
+    /* 퀴즈 영역 */
+    .quiz-main { }
+    .quiz-list { display: flex; flex-direction: column; gap: 16px; }
+    .quiz-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+    .quiz-item-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .quiz-num {
+      width: 28px; height: 28px;
+      background: rgba(201,168,76,0.15);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700; color: var(--accent-gold);
+      flex-shrink: 0;
+    }
+    .quiz-q { font-size: 15px; font-weight: 600; line-height: 1.5; flex: 1; }
+    .quiz-opts { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+    .quiz-opt {
+      padding: 10px 14px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      cursor: pointer;
+      text-align: left;
+      color: var(--text-primary);
+      transition: all 0.15s;
+    }
+    .quiz-opt:hover { border-color: var(--accent-gold); }
+    .quiz-opt:disabled { cursor: default; }
+    .quiz-opt.correct { border-color: var(--success); background: rgba(76,175,130,0.1); color: var(--success); }
+    .quiz-opt.wrong { border-color: var(--danger); background: rgba(232,90,74,0.1); color: var(--danger); }
+    .quiz-exp {
+      display: none;
+      margin-top: 12px;
+      padding: 12px;
+      background: rgba(201,168,76,0.05);
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+    .quiz-answered { border-color: var(--border-accent) !important; }
+
+    /* 뱃지 & 통계 사이드 */
+    .quiz-side { }
+    .stats-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-key { color: var(--text-secondary); }
+    .stat-val { font-weight: 700; color: var(--accent-gold); }
+
+    .badge-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .badge-item {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .badge-item.earned {
+      border-color: rgba(201,168,76,0.4);
+      background: rgba(201,168,76,0.05);
+    }
+    .badge-item.locked { opacity: 0.4; }
+    .badge-item .b-icon { font-size: 26px; margin-bottom: 6px; }
+    .badge-item .b-name { font-size: 11px; font-weight: 600; color: var(--text-secondary); }
+    .badge-item.earned .b-name { color: var(--accent-gold); }
+    .badge-item .b-lock { font-size: 16px; }
+
+    /* 카테고리 필터 */
+    .filter-bar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .filter-btn {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .filter-btn.active, .filter-btn:hover {
+      border-color: var(--accent-gold);
+      color: var(--accent-gold);
+      background: rgba(201,168,76,0.08);
+    }
+
+    @media (max-width: 900px) {
+      .quiz-page-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<aside class="sidebar">
+  <a href="index.html" class="sidebar-logo">Pin<span>Point</span>.</a>
+  <nav class="sidebar-nav">
+    <div class="sidebar-section">메인</div>
+    <a href="dashboard.html" class="sidebar-link"><span class="icon">🏠</span> 대시보드</a>
+    <div class="sidebar-section">카테고리</div>
+    <a href="legal.html" class="sidebar-link"><span class="icon">🏢</span> 법인 법무</a>
+    <a href="stock.html" class="sidebar-link"><span class="icon">📈</span> 주식 / 자본</a>
+    <a href="subsidy.html" class="sidebar-link"><span class="icon">💰</span> 고용 지원금</a>
+    <a href="labor.html" class="sidebar-link"><span class="icon">⚖️</span> 노무 이슈</a>
+    <a href="tax.html" class="sidebar-link"><span class="icon">🧾</span> 세무 이슈</a>
+    <a href="cert.html" class="sidebar-link"><span class="icon">🏆</span> 기업 인증</a>
+    <a href="gov.html" class="sidebar-link"><span class="icon">🏛️</span> 정부지원사업</a>
+    <div class="sidebar-section">성장</div>
+    <a href="quiz.html" class="sidebar-link active"><span class="icon">🎯</span> 퀴즈 & 뱃지</a>
+    <a href="knowledge.html" class="sidebar-link"><span class="icon">📚</span> 역량강화 카드</a>
+  </nav>
+  <div class="sidebar-footer">v0.1 Beta</div>
+</aside>
+
+<div class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">🎯 퀴즈 & 뱃지</span>
+  </div>
+  <div class="page">
+    <div style="margin-bottom:24px;">
+      <h2 style="font-size:22px; font-weight:800; margin-bottom:8px;">실무 퀴즈</h2>
+      <p style="color:var(--text-secondary); font-size:14px;">카테고리별 퀴즈를 풀고 뱃지를 모아보세요!</p>
+    </div>
+
+    <div class="quiz-page-grid">
+      <!-- 퀴즈 -->
+      <div class="quiz-main">
+        <div class="filter-bar" id="filter-bar">
+          <button class="filter-btn active" onclick="filterQuiz('전체', this)">전체</button>
+          <button class="filter-btn" onclick="filterQuiz('법인법무', this)">🏢 법인법무</button>
+          <button class="filter-btn" onclick="filterQuiz('세무', this)">🧾 세무</button>
+          <button class="filter-btn" onclick="filterQuiz('노무', this)">⚖️ 노무</button>
+          <button class="filter-btn" onclick="filterQuiz('고용지원금', this)">💰 고용지원금</button>
+          <button class="filter-btn" onclick="filterQuiz('주식자본', this)">📈 주식자본</button>
+        </div>
+        <div class="quiz-list" id="quiz-list"></div>
+      </div>
+
+      <!-- 사이드 -->
+      <div class="quiz-side">
+        <!-- 통계 -->
+        <div class="stats-card">
+          <div class="section-title" style="margin-bottom:14px;">📊 내 통계</div>
+          <div class="stat-row"><span class="stat-key">총 도전</span><span class="stat-val" id="stat-total">0문제</span></div>
+          <div class="stat-row"><span class="stat-key">정답</span><span class="stat-val" id="stat-correct">0문제</span></div>
+          <div class="stat-row"><span class="stat-key">정답률</span><span class="stat-val" id="stat-rate">0%</span></div>
+          <div class="stat-row"><span class="stat-key">획득 뱃지</span><span class="stat-val" id="stat-badges">0개</span></div>
+        </div>
+
+        <!-- 뱃지 -->
+        <div class="stats-card">
+          <div class="section-title" style="margin-bottom:14px;">🏅 내 뱃지</div>
+          <div class="badge-grid" id="badge-grid"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+  const allBadgeDefs = [
+    { id: 'badge_legal', name: '법무 입문', icon: '🏢' },
+    { id: 'badge_tax', name: '세무 기초', icon: '🧾' },
+    { id: 'badge_subsidy', name: '지원금 헌터', icon: '💰' },
+    { id: 'badge_labor', name: '노무 마스터', icon: '⚖️' },
+    { id: 'badge_stock', name: '주식 전문가', icon: '📈' },
+    { id: 'badge_all', name: '경리 만능인', icon: '🌟' }
+  ];
+
+  let currentFilter = '전체';
+
+  function renderQuizList() {
+    const scores = Storage.get('quiz_scores') || [];
+    const filtered = currentFilter === '전체' ? quizData : quizData.filter(q => q.category === currentFilter);
+    document.getElementById('quiz-list').innerHTML = filtered.map(quiz => {
+      const answered = scores.find(s => s.quizId === quiz.id);
+      return `
+        <div class="quiz-item ${answered ? 'quiz-answered' : ''}" id="quiz-item-${quiz.id}">
+          <div class="quiz-item-header">
+            <div class="quiz-num">Q${quiz.id}</div>
+            <div class="quiz-q">${quiz.question}</div>
+            <div style="display:flex; gap:6px; flex-shrink:0;">
+              <span class="badge badge-muted">${quiz.category}</span>
+              <span class="badge ${quiz.level === '초급' ? 'badge-success' : quiz.level === '중급' ? 'badge-warning' : 'badge-danger'}">${quiz.level}</span>
+              ${answered ? `<span class="badge ${answered.correct ? 'badge-success' : 'badge-danger'}">${answered.correct ? '✓ 정답' : '✗ 오답'}</span>` : ''}
+            </div>
+          </div>
+          ${answered ? `
+            <div class="quiz-exp" style="display:block;">
+              💡 ${quiz.explanation}
+            </div>
+          ` : `
+            <div class="quiz-opts">
+              ${quiz.options.map((opt, i) => `
+                <button class="quiz-opt" onclick="answerPageQuiz(${quiz.id}, ${i}, ${quiz.answer}, this)">
+                  <span style="color:var(--text-muted); margin-right:8px;">${['①','②','③','④'][i]}</span> ${opt}
+                </button>
+              `).join('')}
+            </div>
+            <div class="quiz-exp" id="exp-${quiz.id}">💡 ${quiz.explanation}</div>
+          `}
+        </div>
+      `;
+    }).join('');
+  }
+
+  function answerPageQuiz(quizId, selected, correct, btn) {
+    const opts = btn.closest('.quiz-opts').querySelectorAll('.quiz-opt');
+    opts.forEach(o => o.disabled = true);
+    const isCorrect = selected === correct;
+    opts[selected].classList.add(isCorrect ? 'correct' : 'wrong');
+    opts[correct].classList.add('correct');
+    document.getElementById(`exp-${quizId}`).style.display = 'block';
+    saveQuizResult(quizId, isCorrect);
+    if (isCorrect) showToast('정답입니다! 🎉', 'success');
+    else showToast('오답입니다.', 'error');
+    updatePageStats();
+  }
+
+  function filterQuiz(category, btn) {
+    currentFilter = category;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderQuizList();
+  }
+
+  function renderBadges() {
+    const earned = Storage.get('badges') || [];
+    document.getElementById('badge-grid').innerHTML = allBadgeDefs.map(def => {
+      const isEarned = earned.find(b => b.id === def.id);
+      return `
+        <div class="badge-item ${isEarned ? 'earned' : 'locked'}" title="${isEarned ? '획득!' : '아직 미획득'}">
+          <div class="b-icon">${isEarned ? def.icon : '🔒'}</div>
+          <div class="b-name">${def.name}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function updatePageStats() {
+    const scores = Storage.get('quiz_scores') || [];
+    const total = scores.length;
+    const correct = scores.filter(s => s.correct).length;
+    const badges = Storage.get('badges') || [];
+    document.getElementById('stat-total').textContent = `${total}문제`;
+    document.getElementById('stat-correct').textContent = `${correct}문제`;
+    document.getElementById('stat-rate').textContent = total ? `${Math.round(correct/total*100)}%` : '0%';
+    document.getElementById('stat-badges').textContent = `${badges.length}개`;
+    renderBadges();
+  }
+
+  renderQuizList();
+  updatePageStats();
+</script>
+</body>
+</html>
