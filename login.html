@@ -108,6 +108,9 @@
 
     // 데모 모드로 바로 진입
     if (params.get('demo') === 'true') {
+      // 기존 로그인 세션 끊기
+      await sb.auth.signOut();
+      localStorage.removeItem('pinpoint_company');
       localStorage.setItem('pinpoint_demo', 'true');
       window.location.href = 'dashboard.html';
       return;

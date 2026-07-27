@@ -321,13 +321,9 @@
           <label class="form-label">회사명 *</label>
           <input type="text" class="form-input" id="c-name" placeholder="(주)홍길동기업">
         </div>
-        <div class="form-group">
-          <label class="form-label">업종</label>
-          <select class="form-select" id="c-industry">
-            <option value="">선택</option>
-            <option>제조업</option><option>도소매업</option><option>서비스업</option>
-            <option>IT/소프트웨어</option><option>건설업</option><option>기타</option>
-          </select>
+        <div class="form-group" style="grid-column:1/-1;">
+          <label class="form-label">사업자등록번호</label>
+          <input type="text" class="form-input" id="c-biznum" placeholder="000-00-00000">
         </div>
         <div class="form-group">
           <label class="form-label">법인/개인</label>
@@ -339,21 +335,35 @@
         <div class="form-group">
           <label class="form-label">결산월</label>
           <select class="form-select" id="c-fiscal">
-            <option value="12">12월 (일반)</option>
-            <option value="3">3월</option><option value="6">6월</option><option value="9">9월</option>
+            <option value="1">1월</option><option value="2">2월</option><option value="3">3월</option>
+            <option value="4">4월</option><option value="5">5월</option><option value="6">6월</option>
+            <option value="7">7월</option><option value="8">8월</option><option value="9">9월</option>
+            <option value="10">10월</option><option value="11">11월</option><option value="12">12월 (일반)</option>
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label">근로자 수</label>
+          <label class="form-label">업종</label>
+          <select class="form-select" id="c-industry">
+            <option value="">선택</option>
+            <option>제조업</option><option>도소매업</option><option>서비스업</option>
+            <option>건설업</option><option>IT/소프트웨어</option><option>음식점/숙박</option>
+            <option>의료/보건</option><option>교육</option><option>부동산</option>
+            <option>운수/물류</option><option>기타</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">상시근로자 수</label>
           <select class="form-select" id="c-employees">
-            <option value="5">5인 미만</option><option value="9">5~9인</option>
-            <option value="29">10~29인</option><option value="49">30~49인</option>
-            <option value="99">50~99인</option><option value="100">100인 이상</option>
+            <option value="">선택</option>
+            <option value="1~4명">1~4명</option>
+            <option value="5~9명">5~9명</option>
+            <option value="10~29명">10~29명</option>
+            <option value="30~49명">30~49명</option>
+            <option value="50~99명">50~99명</option>
+            <option value="100~299명">100~299명</option>
+            <option value="300명 이상">300명 이상</option>
           </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">설립연도</label>
-          <input type="number" class="form-input" id="c-founded" placeholder="2015">
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">💡 대표이사·등기임원 제외, 4대보험 가입 근로자 기준</div>
         </div>
       </div>
       <div class="divider"></div>
@@ -528,10 +538,11 @@
     const company = CompanyStore.get();
     if (company) {
       document.getElementById('c-name').value = company.name || '';
+      document.getElementById('c-biznum').value = company.businessNumber || '';
       document.getElementById('c-industry').value = company.industry || '';
       document.getElementById('c-type').value = company.type || '법인';
-      document.getElementById('c-fiscal').value = company.fiscal || company.fiscalMonth || '12';
-      document.getElementById('c-employees').value = company.employees || company.employeeCount || '9';
+      document.getElementById('c-fiscal').value = String(company.fiscal || company.fiscalMonth || '12');
+      document.getElementById('c-employees').value = company.employees || company.employeeCount || '';
       document.getElementById('c-founded').value = company.founded || '';
 
       // 임원 정보 불러오기
@@ -577,16 +588,22 @@
       if (!directors[id-1]) directors[id-1] = {};
       directors[id-1][field] = el.value;
     });
-    CompanyStore.set({
-      name, industry: document.getElementById('c-industry').value,
+    const companyData = {
+      name,
+      businessNumber: document.getElementById('c-biznum').value,
+      industry: document.getElementById('c-industry').value,
       type: document.getElementById('c-type').value,
+      fiscalMonth: parseInt(document.getElementById('c-fiscal').value),
       fiscal: document.getElementById('c-fiscal').value,
+      employeeCount: document.getElementById('c-employees').value,
       employees: document.getElementById('c-employees').value,
       founded: document.getElementById('c-founded').value,
-      directors: directors.filter(d => d && d.name)
-    });
-    // DB에도 저장
-    CompanyDB.set(CompanyStore.get());
+      directors: directors.filter(d => d && d.name).map(d => ({
+        name: d.name, role: d.role || '', startDate: d.date || ''
+      }))
+    };
+    CompanyStore.set(companyData);
+    CompanyDB.set(companyData);
     closeCompanyModal();
     showToast('회사 정보가 저장되었습니다!', 'success');
     loadCompanyInfo();

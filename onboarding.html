@@ -162,6 +162,12 @@
       <div class="form-hint">대부분의 법인은 12월 결산이에요</div>
     </div>
 
+    <div class="form-group">
+      <label class="form-label">설립연도</label>
+      <input type="number" class="form-input" id="founded-year" placeholder="예) 2015" min="1900" max="2099">
+      <div class="form-hint">창업기업 지원금·업력 계산에 활용돼요 (선택사항)</div>
+    </div>
+
     <div id="msg"></div>
     <div class="btn-row">
       <button class="btn btn-primary" onclick="nextStep()">다음 →</button>
@@ -375,6 +381,7 @@
       businessNumber: document.getElementById('business-number').value.trim(),
       type: selectedType,
       fiscalMonth: parseInt(document.getElementById('fiscal-month').value),
+      founded: document.getElementById('founded-year').value || '',
       industry: document.getElementById('industry').value || '',
       employeeCount: document.getElementById('employee-count').value || '',
       directors: directors.filter(d => d.name).map(d => ({ name: d.name, startDate: d.startDate }))

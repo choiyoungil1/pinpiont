@@ -21,6 +21,7 @@ async function requireAuth() {
 // 로그아웃
 async function logout() {
   localStorage.removeItem('pinpoint_demo');
+  localStorage.removeItem('pinpoint_company');
   await sb.auth.signOut();
   window.location.href = 'login.html';
 }
