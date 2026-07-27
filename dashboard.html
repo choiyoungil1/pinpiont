@@ -584,8 +584,10 @@
       localStorage.removeItem('pinpoint_demo');
       document.getElementById('user-email').textContent = user.email;
       const dbCompany = await CompanyDB.get();
-      if (dbCompany && dbCompany.name) {
-        CompanyStore.set(dbCompany);
+      const localCompany = Storage.get('company');
+      const company = dbCompany || localCompany;
+      if (company && company.name) {
+        CompanyStore.set(company);
       } else {
         window.location.href = 'onboarding.html';
         return;

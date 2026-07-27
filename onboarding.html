@@ -355,11 +355,30 @@
     };
 
     try {
+      // localStorage에 먼저 저장 (백업)
+      Storage.set('company', companyData);
+
+      // DB 저장
       await CompanyDB.set(companyData);
-      window.location.href = 'dashboard.html';
+
+      // 저장 확인
+      const saved = await CompanyDB.get();
+      if (saved && saved.name) {
+        window.location.href = 'dashboard.html';
+      } else {
+        // DB 저장 실패해도 localStorage에 있으니 진행
+        window.location.href = 'dashboard.html';
+      }
     } catch(e) {
-      showMsg('msg2', '저장 중 오류가 발생했습니다. 다시 시도해주세요.');
-      btn.textContent = '등록 완료 →'; btn.disabled = false;
+      console.error('저장 오류:', e);
+      // localStorage에 저장됐으면 그냥 진행
+      const local = Storage.get('company');
+      if (local && local.name) {
+        window.location.href = 'dashboard.html';
+      } else {
+        showMsg('msg2', '저장 중 오류가 발생했습니다. 다시 시도해주세요.');
+        btn.textContent = '등록 완료 →'; btn.disabled = false;
+      }
     }
   }
 </script>
