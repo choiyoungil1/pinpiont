@@ -40,6 +40,10 @@
     .tip-tag{font-size:11px;color:var(--accent-gold);background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.2);padding:2px 8px;border-radius:10px;}
 
     @media(max-width:768px){.sidebar{display:none;}.main-content{margin-left:0;}.page{padding:16px;}}
+    .dday-badge.dday-red { background:rgba(232,90,74,0.15); color:var(--danger); }
+    .dday-badge.dday-yellow { background:rgba(232,164,74,0.15); color:var(--warning); }
+    .dday-badge.dday-blue { background:rgba(107,143,212,0.15); color:#6b8fd4; }
+    .dday-badge.dday-green { background:rgba(76,175,130,0.15); color:var(--success); }
   </style>
 </head>
 <body>
@@ -78,42 +82,11 @@
       <div class="section-header">
         <div>
           <div class="section-title">📅 연간 세무 신고 일정</div>
-          <div class="section-sub">법인사업자 12월 결산 기준</div>
+          <div class="section-sub" id="tax-schedule-sub">12월 결산 기준</div>
         </div>
         <a href="calendar.html" class="btn btn-ghost btn-sm">전체 캘린더</a>
       </div>
-      <div class="tax-grid" style="margin-top:16px;">
-        <div class="tax-card">
-          <div class="tax-header"><div class="tax-name">부가세 확정신고 (1월)</div><span class="badge badge-danger">연 2회</span></div>
-          <div class="tax-desc">신고기간: 1월 1일~25일<br>대상: 2기 확정 (7~12월 실적)</div>
-          <div class="tax-meta"><span class="tag">법인</span><span class="tag">개인</span></div>
-        </div>
-        <div class="tax-card">
-          <div class="tax-header"><div class="tax-name">법인세 신고 (3월)</div><span class="badge badge-danger">연 1회</span></div>
-          <div class="tax-desc">신고기간: 3월 1일~31일<br>12월 결산법인 기준. 성실신고 확인 시 4월 말</div>
-          <div class="tax-meta"><span class="tag">법인</span></div>
-        </div>
-        <div class="tax-card">
-          <div class="tax-header"><div class="tax-name">부가세 예정신고 (4월)</div><span class="badge badge-warning">연 2회</span></div>
-          <div class="tax-desc">신고기간: 4월 1일~25일<br>대상: 1기 예정 (1~3월 실적)</div>
-          <div class="tax-meta"><span class="tag">법인</span></div>
-        </div>
-        <div class="tax-card">
-          <div class="tax-header"><div class="tax-name">부가세 확정신고 (7월)</div><span class="badge badge-danger">연 2회</span></div>
-          <div class="tax-desc">신고기간: 7월 1일~25일<br>대상: 1기 확정 (1~6월 실적)</div>
-          <div class="tax-meta"><span class="tag">법인</span><span class="tag">개인</span></div>
-        </div>
-        <div class="tax-card">
-          <div class="tax-header"><div class="tax-name">부가세 예정신고 (10월)</div><span class="badge badge-warning">연 2회</span></div>
-          <div class="tax-desc">신고기간: 10월 1일~25일<br>대상: 2기 예정 (7~9월 실적)</div>
-          <div class="tax-meta"><span class="tag">법인</span></div>
-        </div>
-        <div class="tax-card">
-          <div class="tax-header"><div class="tax-name">원천세 신고</div><span class="badge badge-gold" style="background:rgba(201,168,76,0.15);color:var(--accent-gold);border:1px solid rgba(201,168,76,0.3);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;">매월</span></div>
-          <div class="tax-desc">매월 10일까지 전월분 신고·납부<br>반기납부 사업장은 1월, 7월</div>
-          <div class="tax-meta"><span class="tag">급여</span><span class="tag">원천징수</span></div>
-        </div>
-      </div>
+      <div id="tax-schedule-list" style="margin-top:16px;display:flex;flex-direction:column;gap:10px;"></div>
     </div>
 
     <!-- 절세 팁 -->
@@ -172,5 +145,69 @@
     '부가세 예정신고(4월/10월)는 법인사업자 의무이며, 개인사업자는 예정고지 납부로 대체됩니다.',
     '원천세, 부가세 확정신고는 개인사업자도 해당됩니다.'
   ]);
+
+  function renderTaxSchedule() {
+    const company = CompanyStore.get();
+    const fiscalMonth = company ? parseInt(company.fiscalMonth || company.fiscal || 12) : 12;
+    const isSole = company && company.type === '개인';
+    const today = new Date();
+    const year = today.getFullYear();
+
+    // 결산월 기준 세무 일정 계산
+    const fm = fiscalMonth;
+    const prevFm = fm === 1 ? 12 : fm - 1;
+
+    // 세무 일정 목록 (월/일 기준)
+    const schedules = [
+      // 부가세 확정신고 (결산월+1월 25일) - 2기 확정
+      { name: '부가세 확정신고 (2기)', desc: `${fm}월 결산분 신고 · 대상: ${fm >= 7 ? fm-6 : fm+6}~${fm}월 실적`, month: fm === 12 ? 1 : fm+1, day: 25, freq: '연 2회', tags: ['법인','개인'], corpOnly: false },
+      // 법인세 신고 (결산월+3월 말일)
+      { name: '법인세 신고', desc: `${fm}월 결산법인 기준 · 성실신고 확인 시 +1개월`, month: ((fm + 2) % 12) + 1, day: 31, freq: '연 1회', tags: ['법인'], corpOnly: true },
+      // 부가세 예정신고 (결산월+4월 25일)
+      { name: '부가세 예정신고 (1기)', desc: `1기 예정 신고 · 법인 의무, 개인 예정고지`, month: ((fm + 3) % 12) + 1, day: 25, freq: '연 2회', tags: ['법인'], corpOnly: true },
+      // 부가세 확정신고 (결산월+7월 25일) - 1기 확정
+      { name: '부가세 확정신고 (1기)', desc: `1기 확정 신고 · 대상: ${fm >= 6 ? fm-5 : fm+7}~${fm >= 6 ? fm : fm+12}월 실적`, month: ((fm + 6) % 12) + 1, day: 25, freq: '연 2회', tags: ['법인','개인'], corpOnly: false },
+      // 부가세 예정신고 (결산월+10월 25일)
+      { name: '부가세 예정신고 (2기)', desc: `2기 예정 신고 · 법인 의무, 개인 예정고지`, month: ((fm + 9) % 12) + 1, day: 25, freq: '연 2회', tags: ['법인'], corpOnly: true },
+      // 원천세 (매월 10일)
+      { name: '원천세 신고·납부', desc: '매월 10일까지 전월분 · 반기납부: 1월·7월', month: today.getMonth() + 1, day: 10, freq: '매월', tags: ['급여'], corpOnly: false, monthly: true },
+    ];
+
+    // 각 일정의 마감일 계산 (올해 또는 내년)
+    const items = schedules.map(s => {
+      if (isSole && s.corpOnly) return null;
+      let deadline = new Date(year, s.month - 1, s.day);
+      if (deadline < today) deadline = new Date(year + 1, s.month - 1, s.day);
+      const diff = Math.ceil((deadline - today) / (1000 * 60 * 60 * 24));
+      let ddayClass = 'dday-blue';
+      if (diff <= 7) ddayClass = 'dday-red';
+      else if (diff <= 30) ddayClass = 'dday-yellow';
+      return { ...s, deadline, diff, ddayClass };
+    }).filter(Boolean);
+
+    // D-day 가까운 순 정렬
+    items.sort((a, b) => a.diff - b.diff);
+
+    document.getElementById('tax-schedule-sub').textContent = `${fiscalMonth}월 결산 기준`;
+    document.getElementById('tax-schedule-list').innerHTML = items.map(item => `
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;display:flex;align-items:center;gap:16px;">
+        <div class="dday-badge ${item.ddayClass}" style="min-width:64px;text-align:center;padding:6px 10px;border-radius:8px;font-size:13px;font-weight:800;">
+          ${item.diff === 0 ? 'D-Day' : item.monthly ? `D-${item.diff}` : `D-${item.diff}`}
+        </div>
+        <div style="flex:1;">
+          <div style="font-size:15px;font-weight:700;margin-bottom:4px;">${item.name}</div>
+          <div style="font-size:12px;color:var(--text-secondary);">${item.desc}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+          <span style="font-size:12px;color:var(--text-muted);">${item.deadline.getMonth()+1}월 ${item.deadline.getDate()}일</span>
+          <div style="display:flex;gap:4px;">
+            ${item.tags.map(t => `<span class="tag">${t}</span>`).join('')}
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  renderTaxSchedule();
 </script></body>
 </html>
