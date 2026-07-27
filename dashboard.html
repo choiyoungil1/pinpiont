@@ -580,16 +580,24 @@
     const isDemo = localStorage.getItem('pinpoint_demo') === 'true';
 
     if (user) {
+      // 실제 로그인 유저 → 데모 플래그 무시하고 기업정보 체크
+      localStorage.removeItem('pinpoint_demo');
       document.getElementById('user-email').textContent = user.email;
       const dbCompany = await CompanyDB.get();
-      if (dbCompany) {
+      if (dbCompany && dbCompany.name) {
         CompanyStore.set(dbCompany);
-      } else if (!isDemo) {
-        // 기업정보 없고 데모도 아니면 온보딩으로
+      } else {
         window.location.href = 'onboarding.html';
         return;
       }
+    } else if (isDemo) {
+      // 데모 모드 → 온보딩 건너뛰고 샘플 데이터로 진입
+      document.getElementById('user-email').textContent = '데모 계정';
+    } else {
+      window.location.href = 'login.html';
+      return;
     }
+
     renderTodoList();
     renderQuiz();
     renderKnowledge();
