@@ -206,8 +206,8 @@
     <!-- 웰컴 바 -->
     <div class="welcome-bar">
       <div class="welcome-text">
-        <h2 id="welcome-msg">회사의 꽃, 오늘도 빛나세요! 🌸</h2>
-        <p id="welcome-sub">오늘도 핀포인트가 당신의 가치를 올려드릴게요.</p>
+        <h2 id="welcome-msg">안녕하세요! 👋</h2>
+        <p id="welcome-sub">오늘도 스마트한 업무 파트너 핀포인트와 함께하세요.</p>
       </div>
       <div class="welcome-stats">
         <div class="stat-item">
@@ -528,8 +528,8 @@
     const company = CompanyStore.get();
     if (company) {
       document.getElementById('company-display').textContent = company.name;
-      document.getElementById('welcome-msg').textContent = `회사의 꽃, ${company.name} 담당자님! 🌸`;
-      document.getElementById('welcome-sub').textContent = `${company.industry || ''} · 근로자 ${company.employees}인 이하 · 결산월 ${company.fiscal}월`;
+      document.getElementById('welcome-msg').textContent = `${company.name} 담당자님, 안녕하세요! 👋`;
+      document.getElementById('welcome-sub').textContent = `${company.industry || ''} · 상시근로자 ${company.employeeCount || company.employees || '-'} · 결산월 ${company.fiscalMonth || company.fiscal || '-'}월`;
       document.getElementById('setup-banner').style.display = 'none';
     } else {
       document.getElementById('setup-banner').style.display = 'block';
