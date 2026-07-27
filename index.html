@@ -233,7 +233,7 @@
 <!-- 네비게이션 -->
 <nav class="navbar">
   <a href="index.html" class="navbar-logo">Pin<span>Point</span><span class="dot">.</span></a>
-  <div class="navbar-nav">
+  <div class="navbar-nav" id="nav-buttons">
     <a href="login.html" class="btn btn-outline btn-sm">로그인</a>
     <a href="login.html?tab=signup" class="btn btn-primary btn-sm">회원가입</a>
   </div>
@@ -370,6 +370,26 @@
   <div class="footer-copy">© 2025 PinPoint. 본 서비스의 모든 정보는 참고용이며, 중요한 의사결정 전 반드시 전문가 상담을 받으시기 바랍니다.</div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
 <script src="app.js"></script>
+<script>
+  // 로그인 상태에 따라 네비 버튼 변경
+  window.addEventListener('DOMContentLoaded', async () => {
+    const isDemo = localStorage.getItem('pinpoint_demo') === 'true';
+    let isLoggedIn = isDemo;
+
+    if (!isDemo) {
+      const { data: { session } } = await sb.auth.getSession();
+      isLoggedIn = !!session;
+    }
+
+    if (isLoggedIn) {
+      document.getElementById('nav-buttons').innerHTML = `
+        <a href="dashboard.html" class="btn btn-primary btn-sm">대시보드 →</a>
+      `;
+    }
+  });
+</script>
 </body>
 </html>
