@@ -318,8 +318,16 @@
 
   function renderDirectors() {
     const list = document.getElementById('director-list');
-    list.innerHTML = directors.map(d => `
-      <div class="director-item">
+    const currentYear = new Date().getFullYear();
+    const years = Array.from({length: 20}, (_, i) => currentYear - 15 + i); // 15년전 ~ 4년후
+    const months = Array.from({length: 12}, (_, i) => i + 1);
+    const days = Array.from({length: 31}, (_, i) => i + 1);
+
+    list.innerHTML = directors.map(d => {
+      const parts = d.startDate ? d.startDate.split('-') : ['', '', ''];
+      const y = parts[0] || '', m = parts[1] || '', day = parts[2] || '';
+      return `
+      <div class="director-item" style="grid-template-columns:1fr 2fr auto;">
         <div class="form-group">
           <label class="form-label">이름</label>
           <input type="text" class="form-input" placeholder="홍길동" value="${d.name}"
@@ -327,17 +335,34 @@
         </div>
         <div class="form-group">
           <label class="form-label">임기 시작일</label>
-          <input type="date" class="form-input" value="${d.startDate}"
-            oninput="updateDirector(${d.id}, 'startDate', this.value)">
+          <div style="display:grid; grid-template-columns:2fr 1.5fr 1.5fr; gap:6px;">
+            <select class="form-select" onchange="updateDirectorDate(${d.id}, 'y', this.value)">
+              <option value="">연도</option>
+              ${years.map(yr => `<option value="${yr}" ${String(yr)===y?'selected':''}>${yr}년</option>`).join('')}
+            </select>
+            <select class="form-select" onchange="updateDirectorDate(${d.id}, 'm', this.value)">
+              <option value="">월</option>
+              ${months.map(mo => `<option value="${String(mo).padStart(2,'0')}" ${String(mo).padStart(2,'0')===m?'selected':''}>${mo}월</option>`).join('')}
+            </select>
+            <select class="form-select" onchange="updateDirectorDate(${d.id}, 'd', this.value)">
+              <option value="">일</option>
+              ${days.map(dd => `<option value="${String(dd).padStart(2,'0')}" ${String(dd).padStart(2,'0')===day?'selected':''}>${dd}일</option>`).join('')}
+            </select>
+          </div>
         </div>
         <button class="director-remove" onclick="removeDirector(${d.id})">×</button>
       </div>
-    `).join('');
+    `}).join('');
   }
 
-  function updateDirector(id, field, value) {
+  function updateDirectorDate(id, part, value) {
     const d = directors.find(x => x.id === id);
-    if (d) d[field] = value;
+    if (!d) return;
+    const parts = d.startDate ? d.startDate.split('-') : ['', '', ''];
+    if (part === 'y') parts[0] = value;
+    if (part === 'm') parts[1] = value;
+    if (part === 'd') parts[2] = value;
+    d.startDate = parts.join('-');
   }
 
   async function submit() {
