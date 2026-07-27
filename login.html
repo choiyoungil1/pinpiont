@@ -104,9 +104,20 @@
 
   // 페이지 로드 시 초기화
   window.addEventListener('DOMContentLoaded', async () => {
+    const params = new URLSearchParams(window.location.search);
+
+    // 데모 모드로 바로 진입
+    if (params.get('demo') === 'true') {
+      localStorage.setItem('pinpoint_demo', 'true');
+      window.location.href = 'dashboard.html';
+      return;
+    }
+
+    // 이미 로그인된 경우 대시보드로
     const { data: { session } } = await sb.auth.getSession();
     if (session) { window.location.href = 'dashboard.html'; return; }
-    const params = new URLSearchParams(window.location.search);
+
+    // URL 파라미터로 탭 결정
     if (params.get('tab') === 'signup') switchTab('signup');
   });
 

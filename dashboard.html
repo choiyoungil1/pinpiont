@@ -577,11 +577,18 @@
   // 초기화
   (async () => {
     const user = await requireAuth();
+    const isDemo = localStorage.getItem('pinpoint_demo') === 'true';
+
     if (user) {
       document.getElementById('user-email').textContent = user.email;
-      // DB에서 회사정보 불러오기
       const dbCompany = await CompanyDB.get();
-      if (dbCompany) CompanyStore.set(dbCompany);
+      if (dbCompany) {
+        CompanyStore.set(dbCompany);
+      } else if (!isDemo) {
+        // 기업정보 없고 데모도 아니면 온보딩으로
+        window.location.href = 'onboarding.html';
+        return;
+      }
     }
     renderTodoList();
     renderQuiz();
