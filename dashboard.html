@@ -530,9 +530,27 @@
       document.getElementById('c-name').value = company.name || '';
       document.getElementById('c-industry').value = company.industry || '';
       document.getElementById('c-type').value = company.type || '법인';
-      document.getElementById('c-fiscal').value = company.fiscal || '12';
-      document.getElementById('c-employees').value = company.employees || '9';
+      document.getElementById('c-fiscal').value = company.fiscal || company.fiscalMonth || '12';
+      document.getElementById('c-employees').value = company.employees || company.employeeCount || '9';
       document.getElementById('c-founded').value = company.founded || '';
+
+      // 임원 정보 불러오기
+      const list = document.getElementById('directors-list');
+      list.innerHTML = '';
+      directorCount = 0;
+      const directors = company.directors || [];
+      directors.forEach(d => {
+        directorCount++;
+        const div = document.createElement('div');
+        div.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;margin-bottom:8px;align-items:end;';
+        div.innerHTML = `
+          <input type="text" class="form-input" placeholder="성명" data-director="name-${directorCount}" value="${d.name || ''}">
+          <input type="text" class="form-input" placeholder="직책(이사/감사)" data-director="role-${directorCount}" value="${d.role || ''}">
+          <input type="date" class="form-input" data-director="date-${directorCount}" value="${d.startDate || d.date || ''}">
+          <button class="btn btn-ghost btn-sm" onclick="this.parentElement.remove()">✕</button>
+        `;
+        list.appendChild(div);
+      });
     }
     document.getElementById('company-modal').style.display = 'flex';
   }
