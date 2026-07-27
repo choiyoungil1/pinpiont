@@ -557,12 +557,15 @@
       directors.forEach(d => {
         directorCount++;
         const div = document.createElement('div');
-        div.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;margin-bottom:8px;align-items:end;';
+        div.style.cssText = 'margin-bottom:12px;';
         div.innerHTML = `
-          <input type="text" class="form-input" placeholder="성명" data-director="name-${directorCount}" value="${d.name || ''}">
-          <input type="text" class="form-input" placeholder="직책(이사/감사)" data-director="role-${directorCount}" value="${d.role || ''}">
-          <input type="date" class="form-input" data-director="date-${directorCount}" value="${d.startDate || d.date || ''}">
-          <button class="btn btn-ghost btn-sm" onclick="this.parentElement.remove()">✕</button>
+          <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-bottom:4px;align-items:end;">
+            <input type="text" class="form-input" placeholder="성명" data-director="name-${directorCount}" value="${d.name || ''}">
+            <input type="text" class="form-input" placeholder="직책(이사/감사)" data-director="role-${directorCount}" value="${d.role || ''}">
+            <button class="btn btn-ghost btn-sm" onclick="this.closest('[style]').remove()">✕</button>
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">임기 시작일</div>
+          ${directorDateHTML(directorCount, d.startDate || d.date || '')}
         `;
         list.appendChild(div);
       });
@@ -570,28 +573,66 @@
     document.getElementById('company-modal').style.display = 'flex';
   }
   function closeCompanyModal() { document.getElementById('company-modal').style.display = 'none'; }
+
+  function directorDateHTML(prefix, val) {
+    const currentYear = new Date().getFullYear();
+    const years = Array.from({length: 20}, (_, i) => currentYear - 15 + i);
+    const parts = val ? val.split('-') : ['', '', ''];
+    const y = parts[0] || '', m = parts[1] || '', d = parts[2] || '';
+    return `
+      <div style="display:grid;grid-template-columns:2fr 1.5fr 1.5fr;gap:4px;">
+        <select class="form-select" data-director="year-${prefix}">
+          <option value="">연도</option>
+          ${years.map(yr => `<option value="${yr}" ${String(yr)===y?'selected':''}>${yr}년</option>`).join('')}
+        </select>
+        <select class="form-select" data-director="month-${prefix}">
+          <option value="">월</option>
+          ${Array.from({length:12},(_,i)=>i+1).map(mo => `<option value="${String(mo).padStart(2,'0')}" ${String(mo).padStart(2,'0')===m?'selected':''}>${mo}월</option>`).join('')}
+        </select>
+        <select class="form-select" data-director="day-${prefix}">
+          <option value="">일</option>
+          ${Array.from({length:31},(_,i)=>i+1).map(dd => `<option value="${String(dd).padStart(2,'0')}" ${String(dd).padStart(2,'0')===d?'selected':''}>${dd}일</option>`).join('')}
+        </select>
+      </div>`;
+  }
+
   function addDirector() {
     directorCount++;
     const list = document.getElementById('directors-list');
     const div = document.createElement('div');
-    div.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;margin-bottom:8px;align-items:end;';
+    div.style.cssText = 'margin-bottom:12px;';
     div.innerHTML = `
-      <input type="text" class="form-input" placeholder="성명" data-director="name-${directorCount}">
-      <input type="text" class="form-input" placeholder="직책(이사/감사)" data-director="role-${directorCount}">
-      <input type="date" class="form-input" data-director="date-${directorCount}">
-      <button class="btn btn-ghost btn-sm" onclick="this.parentElement.remove()">✕</button>
+      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-bottom:4px;align-items:end;">
+        <input type="text" class="form-input" placeholder="성명" data-director="name-${directorCount}">
+        <input type="text" class="form-input" placeholder="직책(이사/감사)" data-director="role-${directorCount}">
+        <button class="btn btn-ghost btn-sm" onclick="this.closest('[style]').remove()">✕</button>
+      </div>
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">임기 시작일</div>
+      ${directorDateHTML(directorCount, '')}
     `;
     list.appendChild(div);
   }
   function saveCompany() {
     const name = document.getElementById('c-name').value.trim();
     if (!name) { showToast('회사명을 입력해주세요.', 'error'); return; }
-    const directors = [];
+
+    // 임원 데이터 수집 (드롭다운 방식)
+    const directorMap = {};
     document.querySelectorAll('[data-director]').forEach(el => {
-      const [field, id] = el.dataset.director.split('-');
-      if (!directors[id-1]) directors[id-1] = {};
-      directors[id-1][field] = el.value;
+      const parts = el.dataset.director.split('-');
+      const field = parts[0];
+      const id = parts[1];
+      if (!directorMap[id]) directorMap[id] = {};
+      directorMap[id][field] = el.value;
     });
+    const directors = Object.values(directorMap)
+      .filter(d => d.name)
+      .map(d => ({
+        name: d.name,
+        role: d.role || '',
+        startDate: (d.year && d.month && d.day) ? `${d.year}-${d.month}-${d.day}` : ''
+      }));
+
     const companyData = {
       name,
       businessNumber: document.getElementById('c-biznum').value,
@@ -602,9 +643,7 @@
       employeeCount: document.getElementById('c-employees').value,
       employees: document.getElementById('c-employees').value,
       founded: document.getElementById('c-founded').value,
-      directors: directors.filter(d => d && d.name).map(d => ({
-        name: d.name, role: d.role || '', startDate: d.date || ''
-      }))
+      directors
     };
     CompanyStore.set(companyData);
     CompanyDB.set(companyData);
