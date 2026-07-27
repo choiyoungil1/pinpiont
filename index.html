@@ -386,10 +386,18 @@
 
     if (isLoggedIn) {
       document.getElementById('nav-buttons').innerHTML = `
+        <button onclick="logoutFromMain()" class="btn btn-ghost btn-sm">로그아웃</button>
         <a href="dashboard.html" class="btn btn-primary btn-sm">대시보드 →</a>
       `;
     }
   });
+
+  async function logoutFromMain() {
+    localStorage.removeItem('pinpoint_demo');
+    localStorage.removeItem('pinpoint_company');
+    await sb.auth.signOut();
+    location.reload();
+  }
 </script>
 </body>
 </html>

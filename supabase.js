@@ -47,8 +47,11 @@ const CompanyDB = {
         businessNumber: data.business_number,
         type: data.type,
         fiscalMonth: data.fiscal_month,
+        fiscal: String(data.fiscal_month || 12),
         industry: data.industry,
         employeeCount: data.employee_count,
+        employees: data.employee_count,
+        founded: data.founded,
         directors: data.directors || []
       };
     }
@@ -76,6 +79,7 @@ const CompanyDB = {
       fiscal_month: companyData.fiscalMonth ? parseInt(companyData.fiscalMonth) : null,
       industry: companyData.industry,
       employee_count: companyData.employeeCount,
+      founded: companyData.founded || null,
       directors: companyData.directors || [],
       updated_at: new Date().toISOString()
     };
