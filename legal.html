@@ -38,6 +38,7 @@
     .dday-yellow { background:rgba(232,164,74,0.15); color:var(--warning); }
     .dday-blue { background:rgba(74,111,165,0.15); color:var(--accent-blue-light); }
     .dday-green { background:rgba(76,175,130,0.15); color:var(--success); }
+    .dday-past { background:rgba(255,255,255,0.05); color:var(--text-muted); }
     .director-expire { font-size:11px; color:var(--text-muted); margin-top:3px; }
 
     /* 변동 체크 */
@@ -375,77 +376,61 @@
     const today = new Date();
     const currentYear = today.getFullYear();
 
-    // 결산월 기준 정기 일정 계산
-    function getNextDeadline(month, day) {
+    // 결산월 기준 정기 일정 계산 (30일 이내 지난 것은 유지, 그 이상은 내년)
+    function getDeadline(month, day) {
       let d = new Date(currentYear, month - 1, day);
-      if (d < today) d = new Date(currentYear + 1, month - 1, day);
+      const diff = Math.ceil((d - today) / (1000*60*60*24));
+      if (diff < -30) d = new Date(currentYear + 1, month - 1, day);
       return d;
     }
 
     // 정기주총: 결산월+3개월 말일
     const agmMonth = (fiscalMonth + 2) % 12 + 1;
     const agmLastDay = new Date(currentYear, agmMonth, 0).getDate();
-    const agmDeadline = getNextDeadline(agmMonth, agmLastDay);
+    const agmDeadline = getDeadline(agmMonth, agmLastDay);
 
-    // 결산공고: 정기주총 후 2주 (=주총 마감 + 14일)
+    // 결산공고: 정기주총 후 2주
     const disclosureDeadline = new Date(agmDeadline);
     disclosureDeadline.setDate(disclosureDeadline.getDate() + 14);
 
-    // 법인등기부 열람 권고: 분기 1회 (3,6,9,12월 말)
+    // 법인등기부 열람: 분기 1회 (3,6,9,12월 말)
     const quarters = [3, 6, 9, 12];
     let nextReviewMonth = quarters.find(m => {
       const d = new Date(currentYear, m - 1, 28);
-      return d >= today;
+      return Math.ceil((d - today) / (1000*60*60*24)) >= -30;
     }) || 3;
-    const reviewDeadline = getNextDeadline(nextReviewMonth, 28);
+    const reviewDeadline = getDeadline(nextReviewMonth, 28);
 
     const schedules = [
-      {
-        icon: '🏛️',
-        name: '정기주주총회',
-        deadline: agmDeadline,
-        desc: `결산월(${fiscalMonth}월) 기준 3개월 내 개최 의무`,
-        urgency: Math.ceil((agmDeadline - today) / (1000*60*60*24))
-      },
-      {
-        icon: '📢',
-        name: '결산공고',
-        deadline: disclosureDeadline,
-        desc: '정기주총 후 2주 이내 대차대조표 공고',
-        urgency: Math.ceil((disclosureDeadline - today) / (1000*60*60*24))
-      },
-      {
-        icon: '🔍',
-        name: '법인등기부 열람',
-        deadline: reviewDeadline,
-        desc: '분기 1회 등기 내용 확인 권고 (의무 아님)',
-        urgency: Math.ceil((reviewDeadline - today) / (1000*60*60*24))
-      }
-    ];
-
-    function getDdayStyle(days) {
-      if (days <= 14) return { cls: 'dday-red', label: `D-${days}` };
-      if (days <= 60) return { cls: 'dday-yellow', label: `D-${days}` };
-      if (days <= 180) return { cls: 'dday-blue', label: `D-${days}` };
-      return { cls: 'dday-green', label: `D-${days}` };
-    }
+      { icon: '🏛️', name: '정기주주총회', deadline: agmDeadline, desc: `결산월(${fiscalMonth}월) 기준 3개월 내 개최 의무` },
+      { icon: '📢', name: '결산공고', deadline: disclosureDeadline, desc: '정기주총 후 2주 이내 대차대조표 공고' },
+      { icon: '🔍', name: '법인등기부 열람', deadline: reviewDeadline, desc: '분기 1회 등기 내용 확인 권고 (의무 아님)' }
+    ].map(s => {
+      const diff = Math.ceil((s.deadline - today) / (1000*60*60*24));
+      let cls, label;
+      if (diff < 0) { cls = 'dday-past'; label = `D+${Math.abs(diff)}`; }
+      else if (diff === 0) { cls = 'dday-red'; label = 'D-Day'; }
+      else if (diff <= 14) { cls = 'dday-red'; label = `D-${diff}`; }
+      else if (diff <= 60) { cls = 'dday-yellow'; label = `D-${diff}`; }
+      else if (diff <= 180) { cls = 'dday-blue'; label = `D-${diff}`; }
+      else { cls = 'dday-green'; label = `D-${diff}`; }
+      return { ...s, diff, cls, label };
+    });
 
     const list = document.getElementById('legal-schedule-list');
-    list.innerHTML = schedules.map(s => {
-      const { cls, label } = getDdayStyle(s.urgency);
-      return `
-        <div class="director-item">
-          <div class="director-avatar">${s.icon}</div>
-          <div class="director-info">
-            <div class="director-name">${s.name}</div>
-            <div class="director-role">${s.desc}</div>
-          </div>
-          <div class="director-dday">
-            <div class="dday-badge ${cls}">${label}</div>
-            <div class="director-expire">기한 ${DateUtil.format(s.deadline)}</div>
-          </div>
-        </div>`;
-    }).join('');
+    list.innerHTML = schedules.map(s => `
+      <div class="director-item" style="opacity:${s.diff < 0 ? '0.6' : '1'};">
+        <div class="director-avatar">${s.icon}</div>
+        <div class="director-info">
+          <div class="director-name" style="${s.diff < 0 ? 'text-decoration:line-through;color:var(--text-muted);' : ''}">${s.name}</div>
+          <div class="director-role">${s.desc}</div>
+          ${s.diff < 0 ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">⚠️ ${Math.abs(s.diff)}일 전 마감 — 처리 여부를 확인해보세요</div>` : ''}
+        </div>
+        <div class="director-dday">
+          <div class="dday-badge ${s.cls}">${s.label}</div>
+          <div class="director-expire">기한 ${DateUtil.format(s.deadline)}</div>
+        </div>
+      </div>`).join('');
   }
 
   renderLegalSchedule();

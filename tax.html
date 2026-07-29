@@ -44,6 +44,7 @@
     .dday-badge.dday-yellow { background:rgba(232,164,74,0.15); color:var(--warning); }
     .dday-badge.dday-blue { background:rgba(107,143,212,0.15); color:#6b8fd4; }
     .dday-badge.dday-green { background:rgba(76,175,130,0.15); color:var(--success); }
+    .dday-badge.dday-past { background:rgba(255,255,255,0.05); color:var(--text-muted); }
   </style>
 </head>
 <body>
@@ -177,12 +178,22 @@
     const items = schedules.map(s => {
       if (isSole && s.corpOnly) return null;
       let deadline = new Date(year, s.month - 1, s.day);
-      if (deadline < today) deadline = new Date(year + 1, s.month - 1, s.day);
+
+      // 지나간 일정: 30일 이내만 표시
+      const diffFromToday = Math.ceil((deadline - today) / (1000 * 60 * 60 * 24));
+      if (diffFromToday < -30) {
+        // 30일 이상 지난 건 내년 날짜로
+        deadline = new Date(year + 1, s.month - 1, s.day);
+      }
+
       const diff = Math.ceil((deadline - today) / (1000 * 60 * 60 * 24));
       let ddayClass = 'dday-blue';
-      if (diff <= 7) ddayClass = 'dday-red';
+      let ddayText = `D-${diff}`;
+      if (diff < 0) { ddayClass = 'dday-past'; ddayText = `D+${Math.abs(diff)}`; }
+      else if (diff === 0) { ddayClass = 'dday-red'; ddayText = 'D-Day'; }
+      else if (diff <= 7) ddayClass = 'dday-red';
       else if (diff <= 30) ddayClass = 'dday-yellow';
-      return { ...s, deadline, diff, ddayClass };
+      return { ...s, deadline, diff, ddayClass, ddayText };
     }).filter(Boolean);
 
     // D-day 가까운 순 정렬
@@ -190,13 +201,14 @@
 
     document.getElementById('tax-schedule-sub').textContent = `${fiscalMonth}월 결산 기준`;
     document.getElementById('tax-schedule-list').innerHTML = items.map(item => `
-      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;display:flex;align-items:center;gap:16px;">
+      <div style="background:var(--bg-card);border:1px solid ${item.diff < 0 ? 'var(--border)' : 'var(--border)'};border-radius:var(--radius);padding:16px 20px;display:flex;align-items:center;gap:16px;opacity:${item.diff < 0 ? '0.6' : '1'};">
         <div class="dday-badge ${item.ddayClass}" style="min-width:64px;text-align:center;padding:6px 10px;border-radius:8px;font-size:13px;font-weight:800;">
-          ${item.diff === 0 ? 'D-Day' : item.monthly ? `D-${item.diff}` : `D-${item.diff}`}
+          ${item.ddayText}
         </div>
         <div style="flex:1;">
-          <div style="font-size:15px;font-weight:700;margin-bottom:4px;">${item.name}</div>
+          <div style="font-size:15px;font-weight:700;margin-bottom:4px;${item.diff < 0 ? 'text-decoration:line-through;color:var(--text-muted);' : ''}">${item.name}</div>
           <div style="font-size:12px;color:var(--text-secondary);">${item.desc}</div>
+          ${item.diff < 0 ? `<div style="font-size:11px;color:var(--text-muted);margin-top:4px;">⚠️ ${Math.abs(item.diff)}일 전 마감 — 누락 여부를 확인해보세요</div>` : ''}
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
           <span style="font-size:12px;color:var(--text-muted);">${item.deadline.getMonth()+1}월 ${item.deadline.getDate()}일</span>
